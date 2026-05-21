@@ -4,7 +4,7 @@ from __future__ import annotations
 import sqlite3
 from datetime import datetime
 
-from courant.models import Reminder, format_active_days, format_time, parse_active_days, parse_time
+from courant.models import Event, Reminder, format_active_days, format_time, parse_active_days, parse_time
 
 SCHEMA_VERSION = 1
 
@@ -136,6 +136,54 @@ def update_reminder(conn: sqlite3.Connection, r: Reminder) -> None:
 def delete_reminder(conn: sqlite3.Connection, reminder_id: int) -> None:
     conn.execute("DELETE FROM reminders WHERE id = ?", (reminder_id,))
     conn.commit()
+
+
+def _row_to_event(row: sqlite3.Row) -> Event:
+    return Event(
+        id=row["id"],
+        reminder_id=row["reminder_id"],
+        occurred_at=datetime.fromisoformat(row["occurred_at"]),
+        kind=row["kind"],
+        value=row["value"],
+    )
+
+
+def insert_event(conn: sqlite3.Connection, e: Event) -> int:
+    cursor = conn.execute(
+        "INSERT INTO events (reminder_id, occurred_at, kind, value) VALUES (?, ?, ?, ?)",
+        (e.reminder_id, e.occurred_at.isoformat(), e.kind, e.value),
+    )
+    conn.commit()
+    return cursor.lastrowid  # type: ignore[return-value]
+
+
+def list_events_for_reminder(conn: sqlite3.Connection, reminder_id: int) -> list[Event]:
+    rows = conn.execute(
+        "SELECT * FROM events WHERE reminder_id = ? ORDER BY occurred_at",
+        (reminder_id,),
+    ).fetchall()
+    return [_row_to_event(row) for row in rows]
+
+
+def list_events_in_range(
+    conn: sqlite3.Connection,
+    start: datetime,
+    end: datetime,
+    reminder_id: int | None = None,
+) -> list[Event]:
+    """Events where start <= occurred_at < end. Optionally filtered by reminder."""
+    if reminder_id is None:
+        rows = conn.execute(
+            "SELECT * FROM events WHERE occurred_at >= ? AND occurred_at < ? ORDER BY occurred_at",
+            (start.isoformat(), end.isoformat()),
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            "SELECT * FROM events WHERE reminder_id = ? AND occurred_at >= ? AND occurred_at < ? "
+            "ORDER BY occurred_at",
+            (reminder_id, start.isoformat(), end.isoformat()),
+        ).fetchall()
+    return [_row_to_event(row) for row in rows]
 
 
 def connect(db_path: str) -> sqlite3.Connection:

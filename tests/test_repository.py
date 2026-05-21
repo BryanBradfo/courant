@@ -4,12 +4,15 @@ from __future__ import annotations
 import sqlite3
 from datetime import datetime, time
 
-from courant.models import Reminder, Weekday
+from courant.models import Event, Reminder, Weekday
 from courant.repository import (
     SCHEMA_VERSION,
     delete_reminder,
     get_reminder,
+    insert_event,
     insert_reminder,
+    list_events_for_reminder,
+    list_events_in_range,
     list_reminders,
     migrate,
     update_reminder,
@@ -117,3 +120,52 @@ def test_delete_reminder(memory_db: sqlite3.Connection):
     rid = insert_reminder(memory_db, _sample_reminder())
     delete_reminder(memory_db, rid)
     assert get_reminder(memory_db, rid) is None
+
+
+def test_insert_event_assigns_id(memory_db: sqlite3.Connection):
+    migrate(memory_db)
+    rid = insert_reminder(memory_db, _sample_reminder())
+    eid = insert_event(memory_db, Event(
+        id=None,
+        reminder_id=rid,
+        occurred_at=datetime(2026, 5, 21, 14, 0),
+        kind="fired",
+        value=None,
+    ))
+    assert eid > 0
+
+
+def test_list_events_for_reminder_returns_in_order(memory_db: sqlite3.Connection):
+    migrate(memory_db)
+    rid = insert_reminder(memory_db, _sample_reminder())
+    insert_event(memory_db, Event(None, rid, datetime(2026, 5, 21, 9, 0), "fired", None))
+    insert_event(memory_db, Event(None, rid, datetime(2026, 5, 21, 10, 0), "acked", 250))
+    events = list_events_for_reminder(memory_db, rid)
+    assert len(events) == 2
+    assert events[0].kind == "fired"
+    assert events[1].kind == "acked"
+    assert events[1].value == 250
+
+
+def test_list_events_in_range_excludes_outside(memory_db: sqlite3.Connection):
+    migrate(memory_db)
+    rid = insert_reminder(memory_db, _sample_reminder())
+    insert_event(memory_db, Event(None, rid, datetime(2026, 5, 20, 23, 0), "fired", None))
+    insert_event(memory_db, Event(None, rid, datetime(2026, 5, 21, 9, 0), "fired", None))
+    insert_event(memory_db, Event(None, rid, datetime(2026, 5, 21, 23, 0), "fired", None))
+    insert_event(memory_db, Event(None, rid, datetime(2026, 5, 22, 0, 1), "fired", None))
+    events = list_events_in_range(
+        memory_db,
+        start=datetime(2026, 5, 21, 0, 0),
+        end=datetime(2026, 5, 22, 0, 0),
+    )
+    assert len(events) == 2
+
+
+def test_delete_reminder_cascades_to_events(memory_db: sqlite3.Connection):
+    migrate(memory_db)
+    rid = insert_reminder(memory_db, _sample_reminder())
+    insert_event(memory_db, Event(None, rid, datetime(2026, 5, 21, 14, 0), "fired", None))
+    delete_reminder(memory_db, rid)
+    events = list_events_for_reminder(memory_db, rid)
+    assert events == []
