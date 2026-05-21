@@ -1,0 +1,75 @@
+"""Reminder scheduling via APScheduler.
+
+Each active reminder gets one IntervalTrigger job with id `reminder-{id}`.
+On every sync_jobs(), we add/update active reminders and remove stale ones.
+"""
+from __future__ import annotations
+
+from apscheduler.schedulers.base import BaseScheduler
+from apscheduler.triggers.interval import IntervalTrigger
+
+from courant.notifier import Notifier
+from courant.service import ReminderService
+
+
+_JOB_ID_PREFIX = "reminder-"
+
+
+def _job_id(reminder_id: int) -> str:
+    return f"{_JOB_ID_PREFIX}{reminder_id}"
+
+
+class ReminderScheduler:
+    def __init__(
+        self,
+        scheduler: BaseScheduler,
+        service: ReminderService,
+        notifier: Notifier,
+    ) -> None:
+        self._scheduler = scheduler
+        self._service = service
+        self._notifier = notifier
+
+    def sync_jobs(self) -> None:
+        """Reconcile scheduler state with service.list_active_reminders().
+
+        Idempotent: call after any reminder CRUD operation.
+        """
+        active = self._service.list_active_reminders()
+        active_ids = {r.id for r in active if r.id is not None}
+
+        # Remove jobs for reminders that disappeared or got disabled
+        for job in self._scheduler.get_jobs():
+            if not job.id.startswith(_JOB_ID_PREFIX):
+                continue  # not ours (e.g. snooze jobs from task 15)
+            jid = int(job.id[len(_JOB_ID_PREFIX):])
+            if jid not in active_ids:
+                self._scheduler.remove_job(job.id)
+
+        # Add or update jobs for active reminders
+        for r in active:
+            assert r.id is not None
+            jid = _job_id(r.id)
+            existing = self._scheduler.get_job(jid)
+            if existing is not None:
+                self._scheduler.remove_job(jid)
+            self._scheduler.add_job(
+                func=self._fire,
+                args=[r.id],
+                trigger=IntervalTrigger(minutes=r.interval_minutes),
+                id=jid,
+                replace_existing=True,
+                coalesce=True,
+                max_instances=1,
+            )
+
+    def _fire(self, reminder_id: int) -> None:
+        self._service.fire_reminder(reminder_id, notifier=self._notifier)
+
+    def start(self) -> None:
+        if not self._scheduler.running:
+            self._scheduler.start()
+
+    def shutdown(self) -> None:
+        if self._scheduler.running:
+            self._scheduler.shutdown(wait=False)
