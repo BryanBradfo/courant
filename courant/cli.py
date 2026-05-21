@@ -49,7 +49,6 @@ def _build_notifier() -> Notifier:
 
 def _run_daemon() -> int:
     _setup_logging()
-    ensure_dirs()
     backup_if_stale(db_path())
     conn = connect(str(db_path()))
     migrate(conn)
@@ -91,17 +90,20 @@ def _run_status() -> int:
         print("Courant not initialized (no database found).")
         print(f"Expected at: {db}")
         return 0
+
     conn = connect(str(db))
-    rows = conn.execute(
-        "SELECT id, name, enabled FROM reminders ORDER BY id"
-    ).fetchall()
-    conn.close()
-    if not rows:
-        print("No reminders configured.")
-    else:
-        for row_id, name, enabled in rows:
-            state = "enabled" if enabled else "disabled"
-            print(f"  [{row_id:>2}] {name} ({state})")
+    try:
+        migrate(conn)  # ensure schema if file exists but is empty
+        service = ReminderService(conn)
+        reminders = service.list_reminders()
+    finally:
+        conn.close()
+
+    print(f"Courant — database at {db}")
+    print(f"Reminders configured: {len(reminders)}")
+    for r in reminders:
+        status = "enabled" if r.enabled else "disabled"
+        print(f"  [{r.id:>2}] {r.name} ({status})")
     return 0
 
 

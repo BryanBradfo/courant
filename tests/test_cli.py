@@ -40,9 +40,7 @@ def test_start_creates_db_and_seeds_default_reminders(
     tmp_path: Path,
 ):
     """Spawn `python -m courant.cli start` in a subprocess, give it 2s, kill it,
-    then verify the DB was created and migrated."""
-    # The default_reminders seed lands in Task 20. For now, just verify the DB
-    # is created and migrated.
+    then verify the DB was created, migrated, and seeded with default reminders."""
     env = {
         "XDG_CONFIG_HOME": str(tmp_path / "config"),
         "XDG_DATA_HOME": str(tmp_path / "data"),
