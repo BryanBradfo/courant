@@ -293,11 +293,16 @@ Scène plein écran + panneau glassmorphism centré :
 
 **Panneau central** :
 - `backdrop-filter: blur(20px) saturate(140%)`
-- `background: rgba(255,255,255,0.08)` adapt selon luminosité scène
+- `background` : chaque scène déclare un attribut `theme: 'dark' | 'light'` dans son module JS. Le `<body>` reçoit la classe `scene-dark` ou `scene-light`. Le panneau hérite via CSS :
+  - `.scene-dark .panel { background: rgba(255,255,255,0.08); color: #f5f5f5; }`
+  - `.scene-light .panel { background: rgba(10,20,40,0.35); color: #f5f5f5; }`
+  - (texte clair dans les deux cas pour rester lisible sur la blur)
 - `border: 1px solid rgba(255,255,255,0.18)`
 - `border-radius: 24px`
 - `box-shadow: 0 8px 32px rgba(0,0,0,0.2)`
 - `padding: 48px`, `max-width: 480px`, centré
+
+Mapping scènes → theme : `rainy-window: dark`, `ocean-depth: dark`, `sunset-beach: light`, `forest-stream: dark`, `calm-night: dark`.
 
 ### Typographie
 
@@ -548,6 +553,41 @@ Structure :
 | GNOME Wayland sans tray icon | Pas un problème : on n'a pas de tray. L'accès se fait via URL ou bookmark. |
 | Sons audio (3-4MB total) téléchargés au premier launch | Faire opt-in : ambient sound désactivé par défaut, l'utilisateur l'active depuis settings, ce qui déclenche le download |
 | Audit RGPD / data | App 100% locale, aucun analytics, aucun call externe sauf download initial des sons (depuis Pixabay) |
+
+## Phasing recommandé pour l'implémentation
+
+La v1 est large. Le plan d'implémentation devrait découper en phases livrables et testables :
+
+**Phase 1 — Core fonctionnel** (priorité haute, valeur immédiate)
+- `repository.py` + `models.py` + migrations + tests
+- `service.py` + tests
+- `notifier.py` avec `desktop-notifier` + `FakeNotifier` pour tests
+- `scheduler.py` (APScheduler simple) + tests
+- `cli.py` (start/stop/status/version)
+- À ce stade : l'app envoie des notifs configurables via un fichier de seed (`default_reminders.json`). Pas encore d'UI web.
+
+**Phase 2 — Web UI fonctionnelle** (utilisable au quotidien)
+- `web.py` (FastAPI + routes CRUD + Jinja templates)
+- Pages : dashboard, reminders, settings (minimaux, style basique Tailwind)
+- HTMX pour interactions
+- À ce stade : app utilisable, UI moche mais marche.
+
+**Phase 3 — Esthétique cozy** (la signature visuelle)
+- CSS custom (glassmorphism, typo, layout)
+- 2 scènes en premier (ocean-depth + rainy-window) pour valider le pattern
+- Canvas particles helper
+- Page stats avec chart
+- Sélecteur de scène
+
+**Phase 4 — Polish & distribution** (prêt à publier)
+- 3 scènes restantes (sunset, forest, night)
+- Player audio (optionnel, opt-in)
+- `cli install` (systemd) + backups auto
+- README + screenshots + GIF démo
+- CI GitHub Actions
+- Publish PyPI
+
+Chaque phase est shippable et utile en soi. Si motivation/temps manque, l'app reste utilisable même au stade Phase 2.
 
 ## Non-objectifs (explicitement hors scope v1)
 
