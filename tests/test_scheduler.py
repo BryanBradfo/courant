@@ -106,6 +106,24 @@ def test_sync_jobs_removes_jobs_for_disabled_reminders(
     assert stopped_scheduler.get_job(f"reminder-{rid}") is None
 
 
+def test_schedule_once_creates_single_run_job(
+    memory_db: sqlite3.Connection, stopped_scheduler: BackgroundScheduler,
+):
+    migrate(memory_db)
+    service = ReminderService(memory_db)
+    rid = service.create_reminder(_new_reminder("A"))
+
+    rs = ReminderScheduler(scheduler=stopped_scheduler, service=service, notifier=MagicMock())
+    fire_time = datetime(2026, 5, 21, 15, 30, 0)
+    rs.schedule_once(rid, fire_time)
+
+    expected_id = f"snooze-{rid}-{fire_time.isoformat()}"
+    job = stopped_scheduler.get_job(expected_id)
+    assert job is not None
+    from apscheduler.triggers.date import DateTrigger
+    assert isinstance(job.trigger, DateTrigger)
+
+
 def test_sync_jobs_preserves_next_run_when_unchanged(
     memory_db: sqlite3.Connection, stopped_scheduler: BackgroundScheduler,
 ):

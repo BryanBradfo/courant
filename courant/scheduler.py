@@ -5,9 +5,10 @@ On every sync_jobs(), we add/update active reminders and remove stale ones.
 """
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from apscheduler.schedulers.base import BaseScheduler
+from apscheduler.triggers.date import DateTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 
 from courant.notifier import Notifier
@@ -68,6 +69,21 @@ class ReminderScheduler:
                 coalesce=True,
                 max_instances=1,
             )
+
+    def schedule_once(self, reminder_id: int, fire_at: datetime) -> None:
+        """Schedule a one-shot snooze job for a reminder.
+
+        Job id: ``snooze-{reminder_id}-{fire_at.isoformat()}``.
+        Uses DateTrigger so it fires exactly once at *fire_at*.
+        """
+        job_id = f"snooze-{reminder_id}-{fire_at.isoformat()}"
+        self._scheduler.add_job(
+            func=self._fire,
+            args=[reminder_id],
+            trigger=DateTrigger(run_date=fire_at),
+            id=job_id,
+            replace_existing=True,
+        )
 
     def _fire(self, reminder_id: int) -> None:
         self._service.fire_reminder(reminder_id, notifier=self._notifier)
