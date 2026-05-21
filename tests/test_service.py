@@ -63,3 +63,77 @@ def test_delete_reminder(service: ReminderService):
     rid = service.create_reminder(_new_reminder())
     service.delete_reminder(rid)
     assert service.get_reminder(rid) is None
+
+
+from datetime import timedelta
+from unittest.mock import MagicMock
+
+from courant.repository import list_events_for_reminder
+
+
+def test_is_in_active_window_inside(service: ReminderService):
+    r = _new_reminder()
+    r.active_hours = (time(9, 0), time(18, 0))
+    r.active_days = frozenset(Weekday)
+    # Thursday 14:00
+    now = datetime(2026, 5, 21, 14, 0)
+    assert service.is_in_active_window(r, now) is True
+
+
+def test_is_in_active_window_outside_hours(service: ReminderService):
+    r = _new_reminder()
+    r.active_hours = (time(9, 0), time(18, 0))
+    r.active_days = frozenset(Weekday)
+    now = datetime(2026, 5, 21, 22, 0)
+    assert service.is_in_active_window(r, now) is False
+
+
+def test_is_in_active_window_wrong_day(service: ReminderService):
+    r = _new_reminder()
+    r.active_hours = (time(0, 0), time(23, 59))
+    r.active_days = frozenset({Weekday.MON})
+    now = datetime(2026, 5, 21, 14, 0)  # Thursday
+    assert service.is_in_active_window(r, now) is False
+
+
+def test_fire_reminder_logs_event_and_calls_notifier(service: ReminderService):
+    rid = service.create_reminder(_new_reminder())
+    fake_notifier = MagicMock()
+    service.fire_reminder(rid, notifier=fake_notifier, now=datetime(2026, 5, 21, 14, 0))
+
+    events = list_events_for_reminder(service._conn, rid)
+    assert len(events) == 1
+    assert events[0].kind == "fired"
+    fake_notifier.notify.assert_called_once()
+
+
+def test_fire_reminder_skipped_when_outside_window(service: ReminderService):
+    r = _new_reminder()
+    r.active_hours = (time(9, 0), time(18, 0))
+    r.active_days = frozenset(Weekday)
+    rid = service.create_reminder(r)
+
+    fake_notifier = MagicMock()
+    service.fire_reminder(rid, notifier=fake_notifier, now=datetime(2026, 5, 21, 22, 0))
+
+    assert list_events_for_reminder(service._conn, rid) == []
+    fake_notifier.notify.assert_not_called()
+
+
+def test_fire_reminder_skipped_when_paused(service: ReminderService):
+    r = _new_reminder()
+    r.paused_until = datetime(2026, 5, 21, 16, 0)
+    rid = service.create_reminder(r)
+
+    fake_notifier = MagicMock()
+    service.fire_reminder(rid, notifier=fake_notifier, now=datetime(2026, 5, 21, 14, 0))
+
+    assert list_events_for_reminder(service._conn, rid) == []
+    fake_notifier.notify.assert_not_called()
+
+
+def test_fire_reminder_no_op_for_missing_reminder(service: ReminderService):
+    fake_notifier = MagicMock()
+    # Should not raise
+    service.fire_reminder(999, notifier=fake_notifier, now=datetime(2026, 5, 21, 14, 0))
+    fake_notifier.notify.assert_not_called()
