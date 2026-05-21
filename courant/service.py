@@ -10,11 +10,11 @@ from __future__ import annotations
 import importlib.resources
 import json
 import sqlite3
-from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 from courant.models import Event, Reminder, Weekday, parse_active_days, parse_time
+from courant.notifier import Notifier
 from courant.repository import (
     delete_reminder,
     get_reminder,
@@ -79,7 +79,7 @@ class ReminderService:
     def fire_reminder(
         self,
         reminder_id: int,
-        notifier,  # Notifier protocol — typed in Task 12
+        notifier: Notifier,
         now: datetime | None = None,
     ) -> None:
         """Trigger a notification for this reminder, if conditions allow.

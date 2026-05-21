@@ -3,11 +3,12 @@ from __future__ import annotations
 
 import sqlite3
 from datetime import datetime, time
+from unittest.mock import MagicMock
 
 import pytest
 
 from courant.models import Reminder, Weekday
-from courant.repository import migrate
+from courant.repository import list_events_for_reminder, migrate
 from courant.service import ReminderService
 
 
@@ -63,12 +64,6 @@ def test_delete_reminder(service: ReminderService):
     rid = service.create_reminder(_new_reminder())
     service.delete_reminder(rid)
     assert service.get_reminder(rid) is None
-
-
-from datetime import timedelta
-from unittest.mock import MagicMock
-
-from courant.repository import list_events_for_reminder
 
 
 def test_is_in_active_window_inside(service: ReminderService):
@@ -185,7 +180,6 @@ def test_handle_action_missing_reminder_silently_ignored(service: ReminderServic
     service.handle_action(9999, "ack")
 
 
-from courant.service import DailyProgress
 
 
 def test_daily_progress_counts_acked_events_today(service: ReminderService):

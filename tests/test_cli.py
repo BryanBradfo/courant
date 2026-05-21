@@ -1,7 +1,6 @@
 """Tests for the courant CLI."""
 from __future__ import annotations
 
-import os
 import signal
 import sqlite3
 import subprocess
@@ -88,7 +87,6 @@ def test_status_with_db_shows_reminder_count(
     capsys: pytest.CaptureFixture[str],
 ):
     """status shows reminder rows when DB exists."""
-    import sqlite3 as _sqlite3
     from courant.repository import connect, migrate
 
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
@@ -101,7 +99,9 @@ def test_status_with_db_shows_reminder_count(
     conn = connect(str(db_file))
     migrate(conn)
     conn.execute(
-        "INSERT INTO reminders (name, message, interval_minutes, created_at, enabled) VALUES (?, ?, ?, ?, ?)",
+        "INSERT INTO reminders"
+        " (name, message, interval_minutes, created_at, enabled)"
+        " VALUES (?, ?, ?, ?, ?)",
         ("Eau", "Bois de l'eau !", 60, "2026-01-01T00:00:00", 1),
     )
     conn.commit()

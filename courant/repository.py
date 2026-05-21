@@ -7,7 +7,14 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from courant.models import Event, Reminder, format_active_days, format_time, parse_active_days, parse_time
+from courant.models import (
+    Event,
+    Reminder,
+    format_active_days,
+    format_time,
+    parse_active_days,
+    parse_time,
+)
 
 SCHEMA_VERSION = 1
 

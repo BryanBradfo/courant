@@ -7,11 +7,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, time
-from enum import Enum
+from enum import StrEnum
 from typing import Literal
 
 
-class Weekday(str, Enum):
+class Weekday(StrEnum):
     MON = "mon"
     TUE = "tue"
     WED = "wed"

@@ -14,7 +14,7 @@ import subprocess
 import sys
 import time as time_module
 
-from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.background import BackgroundScheduler  # type: ignore[import-untyped]
 
 from courant import __version__
 from courant.notifier import DesktopNotifier, FakeNotifier, Notifier
@@ -42,7 +42,7 @@ def _build_notifier() -> Notifier:
     """Try DesktopNotifier; fall back to FakeNotifier on failure (logged)."""
     try:
         return DesktopNotifier(app_name="Courant")
-    except Exception as exc:  # noqa: BLE001 — fallback is intentional
+    except Exception as exc:
         logger.warning("Falling back to FakeNotifier (no notifications): %s", exc)
         return FakeNotifier()
 
@@ -68,7 +68,7 @@ def _run_daemon() -> int:
 
     stop_requested = False
 
-    def _on_signal(signum, _frame):
+    def _on_signal(signum: int, _frame: object) -> None:
         nonlocal stop_requested
         logger.info("Received signal %d, shutting down", signum)
         stop_requested = True

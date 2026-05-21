@@ -11,7 +11,6 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Protocol
 
-
 ActionId = str
 ActionLabel = str
 Action = tuple[ActionId, ActionLabel]
@@ -82,7 +81,7 @@ class DesktopNotifier:
         # Lazy-import so tests/CI without the lib still parse this file
         import threading
 
-        from desktop_notifier import DesktopNotifier as DN  # type: ignore[import-untyped]
+        from desktop_notifier import DesktopNotifier as DN
 
         self._loop = asyncio.new_event_loop()
         thread = threading.Thread(
@@ -99,13 +98,13 @@ class DesktopNotifier:
         actions: list[Action],
         on_action: ActionCallback,
     ) -> None:
-        from desktop_notifier import Button  # type: ignore[import-untyped]
+        from desktop_notifier import Button
 
         buttons = [
-            Button(title=label, on_pressed=lambda aid=aid: on_action(aid))
+            Button(title=label, on_pressed=lambda aid=aid: on_action(aid))  # type: ignore[misc]
             for aid, label in actions
         ]
-        coro = self._notifier.send(  # type: ignore[union-attr]
+        coro = self._notifier.send(  # type: ignore[attr-defined]
             title=title,
             message=body,
             buttons=buttons,
@@ -113,9 +112,9 @@ class DesktopNotifier:
         assert self._loop is not None
         future = asyncio.run_coroutine_threadsafe(coro, self._loop)
 
-        def _log_error(fut: asyncio.Future) -> None:  # type: ignore[type-arg]
+        def _log_error(fut: asyncio.Future[object]) -> None:
             exc = fut.exception()
             if exc:
                 logger.warning("Notification failed: %s", exc)
 
-        future.add_done_callback(_log_error)
+        future.add_done_callback(_log_error)  # type: ignore[arg-type]

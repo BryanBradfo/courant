@@ -7,13 +7,12 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
-from apscheduler.schedulers.base import BaseScheduler
-from apscheduler.triggers.date import DateTrigger
-from apscheduler.triggers.interval import IntervalTrigger
+from apscheduler.schedulers.base import BaseScheduler  # type: ignore[import-untyped]
+from apscheduler.triggers.date import DateTrigger  # type: ignore[import-untyped]
+from apscheduler.triggers.interval import IntervalTrigger  # type: ignore[import-untyped]
 
 from courant.notifier import Notifier
 from courant.service import ReminderService
-
 
 _JOB_ID_PREFIX = "reminder-"
 
@@ -45,8 +44,8 @@ class ReminderScheduler:
         for job in self._scheduler.get_jobs():
             if not job.id.startswith(_JOB_ID_PREFIX):
                 continue  # not ours (e.g. snooze jobs from task 15)
-            jid = int(job.id[len(_JOB_ID_PREFIX):])
-            if jid not in active_ids:
+            rid = int(job.id[len(_JOB_ID_PREFIX):])
+            if rid not in active_ids:
                 self._scheduler.remove_job(job.id)
 
         # Add or update jobs for active reminders
