@@ -1,12 +1,16 @@
 """Tests for SQLite repository."""
 from __future__ import annotations
 
+import os
 import sqlite3
+import time as time_module
 from datetime import datetime, time
+from pathlib import Path
 
 from courant.models import Event, Reminder, Weekday
 from courant.repository import (
     SCHEMA_VERSION,
+    backup_if_stale,
     delete_reminder,
     get_reminder,
     get_setting,
@@ -189,3 +193,45 @@ def test_set_setting_upserts(memory_db: sqlite3.Connection):
     set_setting(memory_db, "snooze_minutes", "10")
     set_setting(memory_db, "snooze_minutes", "20")
     assert get_setting(memory_db, "snooze_minutes") == "20"
+
+
+def test_backup_creates_file_when_no_prior_backup(tmp_path: Path):
+    db = tmp_path / "courant.db"
+    conn = sqlite3.connect(db)
+    migrate(conn)
+    conn.close()
+
+    created = backup_if_stale(db, max_age_hours=24, retain=7)
+    assert created is not None
+    assert created.exists()
+    assert created.name.startswith("courant.db.backup-")
+
+
+def test_backup_skips_if_recent(tmp_path: Path):
+    db = tmp_path / "courant.db"
+    conn = sqlite3.connect(db)
+    migrate(conn)
+    conn.close()
+
+    first = backup_if_stale(db, max_age_hours=24, retain=7)
+    assert first is not None
+    second = backup_if_stale(db, max_age_hours=24, retain=7)
+    assert second is None  # Not stale yet
+
+
+def test_backup_prunes_old_backups(tmp_path: Path):
+    db = tmp_path / "courant.db"
+    conn = sqlite3.connect(db)
+    migrate(conn)
+    conn.close()
+
+    # Manually create 10 old backups with distinct names and mtimes
+    for i in range(10):
+        old = tmp_path / f"courant.db.backup-2026010{i}"
+        old.write_bytes(b"fake")
+        old_time = time_module.time() - (i + 1) * 86400
+        os.utime(old, (old_time, old_time))
+
+    backup_if_stale(db, max_age_hours=24, retain=7)
+    remaining = sorted(tmp_path.glob("courant.db.backup-*"))
+    assert len(remaining) == 7

@@ -1,8 +1,11 @@
 """SQLite repository for Courant. Stdlib sqlite3 only, no ORM."""
 from __future__ import annotations
 
+import shutil
 import sqlite3
+import time
 from datetime import datetime
+from pathlib import Path
 
 from courant.models import Event, Reminder, format_active_days, format_time, parse_active_days, parse_time
 
@@ -206,3 +209,33 @@ def connect(db_path: str) -> sqlite3.Connection:
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     return conn
+
+
+def backup_if_stale(db_path: Path, max_age_hours: int = 24, retain: int = 7) -> Path | None:
+    """Create a timestamped backup if the most recent one is older than max_age_hours.
+
+    Prunes backups beyond `retain` count (newest kept). Returns the new backup path,
+    or None if no backup was created (too recent).
+    """
+    if not db_path.exists():
+        return None
+
+    parent = db_path.parent
+    pattern = f"{db_path.name}.backup-*"
+    existing = sorted(parent.glob(pattern), key=lambda p: p.stat().st_mtime, reverse=True)
+
+    if existing:
+        most_recent_age_h = (time.time() - existing[0].stat().st_mtime) / 3600
+        if most_recent_age_h < max_age_hours:
+            return None
+
+    timestamp = time.strftime("%Y%m%d-%H%M%S")
+    backup_path = parent / f"{db_path.name}.backup-{timestamp}"
+    shutil.copy2(db_path, backup_path)
+
+    # Prune
+    all_backups = sorted(parent.glob(pattern), key=lambda p: p.stat().st_mtime, reverse=True)
+    for old in all_backups[retain:]:
+        old.unlink()
+
+    return backup_path
