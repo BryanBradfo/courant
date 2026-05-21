@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+
+# Virtual envs
+.venv/
+venv/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Courant runtime (should never be in repo)
+courant/static/sounds/
+
+# OS
+.DS_Store

@@ -1,0 +1,49 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "courant"
+version = "0.1.0"
+description = "Un rappel cozy pour les devs : eau, yeux, étirements."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+authors = [
+    { name = "Bryan Chen", email = "bryan.chen@wingleet.com" },
+]
+dependencies = [
+    "apscheduler>=3.10",
+    "desktop-notifier>=4.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "freezegun>=1.4",
+    "ruff>=0.4",
+    "mypy>=1.10",
+]
+
+[project.scripts]
+courant = "courant.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["courant"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "RUF"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
