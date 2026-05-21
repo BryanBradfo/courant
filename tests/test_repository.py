@@ -2,8 +2,18 @@
 from __future__ import annotations
 
 import sqlite3
+from datetime import datetime, time
 
-from courant.repository import SCHEMA_VERSION, migrate
+from courant.models import Reminder, Weekday
+from courant.repository import (
+    SCHEMA_VERSION,
+    delete_reminder,
+    get_reminder,
+    insert_reminder,
+    list_reminders,
+    migrate,
+    update_reminder,
+)
 
 
 def test_migrate_creates_all_tables(memory_db: sqlite3.Connection):
@@ -41,3 +51,69 @@ def test_migrate_creates_event_index(memory_db: sqlite3.Connection):
         )
     }
     assert "idx_events_reminder_time" in indexes
+
+
+def _sample_reminder(name: str = "Eau") -> Reminder:
+    return Reminder(
+        id=None,
+        name=name,
+        message="Hydrate-toi",
+        icon="💧",
+        interval_minutes=45,
+        active_hours=(time(9, 0), time(18, 0)),
+        active_days=frozenset({Weekday.MON, Weekday.TUE}),
+        enabled=True,
+        tracked=True,
+        unit_label="verre",
+        unit_amount=250,
+        daily_goal=8,
+        created_at=datetime(2026, 5, 21, 10, 0),
+        paused_until=None,
+    )
+
+
+def test_insert_and_get_reminder(memory_db: sqlite3.Connection):
+    migrate(memory_db)
+    reminder = _sample_reminder()
+    new_id = insert_reminder(memory_db, reminder)
+    assert new_id > 0
+    fetched = get_reminder(memory_db, new_id)
+    assert fetched is not None
+    assert fetched.name == "Eau"
+    assert fetched.interval_minutes == 45
+    assert fetched.icon == "💧"
+    assert fetched.active_days == frozenset({Weekday.MON, Weekday.TUE})
+
+
+def test_get_reminder_missing_returns_none(memory_db: sqlite3.Connection):
+    migrate(memory_db)
+    assert get_reminder(memory_db, 9999) is None
+
+
+def test_list_reminders_orders_by_id(memory_db: sqlite3.Connection):
+    migrate(memory_db)
+    id_a = insert_reminder(memory_db, _sample_reminder("A"))
+    id_b = insert_reminder(memory_db, _sample_reminder("B"))
+    reminders = list_reminders(memory_db)
+    assert [r.id for r in reminders] == [id_a, id_b]
+
+
+def test_update_reminder(memory_db: sqlite3.Connection):
+    migrate(memory_db)
+    rid = insert_reminder(memory_db, _sample_reminder())
+    fetched = get_reminder(memory_db, rid)
+    assert fetched is not None
+    fetched.interval_minutes = 60
+    fetched.enabled = False
+    update_reminder(memory_db, fetched)
+    reloaded = get_reminder(memory_db, rid)
+    assert reloaded is not None
+    assert reloaded.interval_minutes == 60
+    assert reloaded.enabled is False
+
+
+def test_delete_reminder(memory_db: sqlite3.Connection):
+    migrate(memory_db)
+    rid = insert_reminder(memory_db, _sample_reminder())
+    delete_reminder(memory_db, rid)
+    assert get_reminder(memory_db, rid) is None
