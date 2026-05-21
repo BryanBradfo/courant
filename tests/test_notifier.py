@@ -1,7 +1,11 @@
 """Tests for FakeNotifier (used as test double everywhere else)."""
 from __future__ import annotations
 
-from courant.notifier import FakeNotifier
+import os
+
+import pytest
+
+from courant.notifier import DesktopNotifier, FakeNotifier
 
 
 def test_fake_notifier_records_calls():
@@ -35,6 +39,22 @@ def test_fake_notifier_trigger_action_calls_back():
 
 def test_fake_notifier_trigger_invalid_call_index_raises():
     n = FakeNotifier()
-    import pytest
     with pytest.raises(IndexError):
         n.trigger_action(0, "ack")
+
+
+@pytest.mark.skipif(
+    not os.environ.get("DBUS_SESSION_BUS_ADDRESS"),
+    reason="No D-Bus session available (CI usually skips this)",
+)
+def test_desktop_notifier_smoke():
+    """Sends a real notification — only runs when D-Bus is around."""
+    n = DesktopNotifier(app_name="courant-test")
+    n.notify(
+        title="Courant test",
+        body="If you see this, D-Bus integration works.",
+        icon=None,
+        actions=[],
+        on_action=lambda a: None,
+    )
+    # Nothing to assert programmatically — visual check only

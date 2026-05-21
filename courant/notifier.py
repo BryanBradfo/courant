@@ -58,3 +58,64 @@ class FakeNotifier:
     def trigger_action(self, call_index: int, action_id: ActionId) -> None:
         """Simulate the user clicking an action on a previously-sent notif."""
         self.calls[call_index].on_action(action_id)
+
+
+import asyncio  # noqa: E402
+import logging  # noqa: E402
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class DesktopNotifier:
+    """Notifier backed by the `desktop-notifier` library (D-Bus on Linux).
+
+    Uses an event loop running in a background thread so callbacks fire
+    without blocking the scheduler.
+    """
+
+    app_name: str = "Courant"
+    _loop: asyncio.AbstractEventLoop | None = field(default=None, init=False)
+    _notifier: object | None = field(default=None, init=False)  # desktop_notifier.DesktopNotifier
+
+    def __post_init__(self) -> None:
+        # Lazy-import so tests/CI without the lib still parse this file
+        import threading
+
+        from desktop_notifier import DesktopNotifier as DN  # type: ignore[import-untyped]
+
+        self._loop = asyncio.new_event_loop()
+        thread = threading.Thread(
+            target=self._loop.run_forever, daemon=True, name="courant-notif"
+        )
+        thread.start()
+        self._notifier = DN(app_name=self.app_name)
+
+    def notify(
+        self,
+        title: str,
+        body: str,
+        icon: str | None,
+        actions: list[Action],
+        on_action: ActionCallback,
+    ) -> None:
+        from desktop_notifier import Button  # type: ignore[import-untyped]
+
+        buttons = [
+            Button(title=label, on_pressed=lambda aid=aid: on_action(aid))
+            for aid, label in actions
+        ]
+        coro = self._notifier.send(  # type: ignore[union-attr]
+            title=title,
+            message=body,
+            buttons=buttons,
+        )
+        assert self._loop is not None
+        future = asyncio.run_coroutine_threadsafe(coro, self._loop)
+
+        def _log_error(fut: asyncio.Future) -> None:  # type: ignore[type-arg]
+            exc = fut.exception()
+            if exc:
+                logger.warning("Notification failed: %s", exc)
+
+        future.add_done_callback(_log_error)
