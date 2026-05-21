@@ -137,3 +137,49 @@ def test_fire_reminder_no_op_for_missing_reminder(service: ReminderService):
     # Should not raise
     service.fire_reminder(999, notifier=fake_notifier, now=datetime(2026, 5, 21, 14, 0))
     fake_notifier.notify.assert_not_called()
+
+
+def test_handle_action_ack_logs_event_with_unit_amount(service: ReminderService):
+    rid = service.create_reminder(_new_reminder())
+    service.handle_action(rid, "ack", now=datetime(2026, 5, 21, 14, 0))
+    events = list_events_for_reminder(service._conn, rid)
+    assert len(events) == 1
+    assert events[0].kind == "acked"
+    assert events[0].value == 250  # unit_amount from _new_reminder
+
+
+def test_handle_action_ack_no_value_when_untracked(service: ReminderService):
+    r = _new_reminder()
+    r.tracked = False
+    r.unit_amount = None
+    rid = service.create_reminder(r)
+    service.handle_action(rid, "ack")
+    events = list_events_for_reminder(service._conn, rid)
+    assert events[0].kind == "acked"
+    assert events[0].value is None
+
+
+def test_handle_action_snooze_logs_event(service: ReminderService):
+    rid = service.create_reminder(_new_reminder())
+    service.handle_action(rid, "snooze")
+    events = list_events_for_reminder(service._conn, rid)
+    assert events[-1].kind == "snoozed"
+
+
+def test_handle_action_dismissed(service: ReminderService):
+    rid = service.create_reminder(_new_reminder())
+    service.handle_action(rid, "dismissed")
+    events = list_events_for_reminder(service._conn, rid)
+    assert events[-1].kind == "dismissed"
+
+
+def test_handle_action_unknown_is_silently_ignored(service: ReminderService):
+    rid = service.create_reminder(_new_reminder())
+    # Should not raise
+    service.handle_action(rid, "bogus")
+    assert list_events_for_reminder(service._conn, rid) == []
+
+
+def test_handle_action_missing_reminder_silently_ignored(service: ReminderService):
+    # Should not raise
+    service.handle_action(9999, "ack")

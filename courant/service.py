@@ -112,6 +112,33 @@ class ReminderService:
         actions.append(("snooze", f"Snooze {self._snooze_minutes_default}min"))
         return actions
 
-    def handle_action(self, reminder_id: int, action_id: str) -> None:
-        # Implemented in Task 10
-        raise NotImplementedError
+    def handle_action(
+        self,
+        reminder_id: int,
+        action_id: str,
+        now: datetime | None = None,
+    ) -> None:
+        """Process a user action on a notification.
+
+        Known actions: 'ack', 'snooze', 'dismissed'. Unknown actions are
+        silently ignored to be forward-compatible with future notifier impls.
+        """
+        if action_id not in ("ack", "snooze", "dismissed"):
+            return
+
+        now = now or datetime.now()
+        r = self.get_reminder(reminder_id)
+        if r is None:
+            return  # Reminder was deleted between notif and click
+
+        kind_map = {"ack": "acked", "snooze": "snoozed", "dismissed": "dismissed"}
+        kind = kind_map[action_id]
+        value = r.unit_amount if kind == "acked" and r.tracked else None
+
+        insert_event(self._conn, Event(
+            id=None,
+            reminder_id=reminder_id,
+            occurred_at=now,
+            kind=kind,  # type: ignore[arg-type]
+            value=value,
+        ))
