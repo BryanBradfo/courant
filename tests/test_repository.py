@@ -9,12 +9,14 @@ from courant.repository import (
     SCHEMA_VERSION,
     delete_reminder,
     get_reminder,
+    get_setting,
     insert_event,
     insert_reminder,
     list_events_for_reminder,
     list_events_in_range,
     list_reminders,
     migrate,
+    set_setting,
     update_reminder,
 )
 
@@ -169,3 +171,21 @@ def test_delete_reminder_cascades_to_events(memory_db: sqlite3.Connection):
     delete_reminder(memory_db, rid)
     events = list_events_for_reminder(memory_db, rid)
     assert events == []
+
+
+def test_set_and_get_setting(memory_db: sqlite3.Connection):
+    migrate(memory_db)
+    set_setting(memory_db, "snooze_minutes", "15")
+    assert get_setting(memory_db, "snooze_minutes") == "15"
+
+
+def test_get_setting_missing_returns_default(memory_db: sqlite3.Connection):
+    migrate(memory_db)
+    assert get_setting(memory_db, "nope", default="fallback") == "fallback"
+
+
+def test_set_setting_upserts(memory_db: sqlite3.Connection):
+    migrate(memory_db)
+    set_setting(memory_db, "snooze_minutes", "10")
+    set_setting(memory_db, "snooze_minutes", "20")
+    assert get_setting(memory_db, "snooze_minutes") == "20"
