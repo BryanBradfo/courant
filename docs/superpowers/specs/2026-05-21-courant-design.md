@@ -1,4 +1,4 @@
-# `rappel` — Design Spec
+# `Courant` — Design Spec
 
 **Date** : 2026-05-21
 **Auteur** : Bryan Chen
@@ -6,7 +6,7 @@
 
 ## Résumé en une phrase
 
-`rappel` est une app desktop Linux open source, à l'esthétique cozy/lo-fi, qui envoie des rappels système personnalisables (boire, faire une pause, étirements, etc.) et trace la complétion dans une interface web locale visuellement immersive.
+`Courant` est une app desktop Linux open source, à l'esthétique cozy/lo-fi, qui envoie des rappels système personnalisables (boire, faire une pause, étirements, etc.) et trace la complétion dans une interface web locale visuellement immersive.
 
 ## Public cible
 
@@ -21,6 +21,7 @@ Développeurs (et plus largement, knowledge workers) sur Linux qui veulent prend
 | Type de rappels | Personnalisables multiples (générique) | Pas spécifique à l'eau ; cas d'usage = eau, yeux, étirements, médicaments, etc. |
 | Interface principale | Mini-serveur web local (`localhost:8765`) | Portable, jolie facilement, futur-proof pour accès mobile sur LAN |
 | Esthétique | Cozy/lo-fi à la studywithme.io (scènes ambient + glassmorphism) | Critère explicite utilisateur |
+| Nom | `Courant` (évoque flux/mouvement/eau, court à taper) | Préférence utilisateur |
 | Licence | MIT | Standard open source, permissive |
 
 ## Architecture
@@ -31,7 +32,7 @@ Un seul process Python qui combine serveur web (FastAPI) + scheduler de rappels 
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                  rappel (process unique)                     │
+│                  courant (process unique)                    │
 │                                                              │
 │  ┌──────────────┐    ┌──────────────┐   ┌───────────────┐  │
 │  │  Web Router  │    │   Scheduler  │   │   Notifier    │  │
@@ -62,15 +63,15 @@ Un seul process Python qui combine serveur web (FastAPI) + scheduler de rappels 
 
 | Module | Responsabilité | Dépend de |
 |---|---|---|
-| `rappel/web.py` | Routes FastAPI, sert templates Jinja | `service` |
-| `rappel/scheduler.py` | Boucle APScheduler, planifie/replanifie les jobs | `service`, `notifier` |
-| `rappel/notifier.py` | Wrapper `desktop-notifier` + callbacks d'actions | — |
-| `rappel/service.py` | Logique métier (rappels, logs, stats) | `repository` |
-| `rappel/repository.py` | CRUD SQLite, migrations | — |
-| `rappel/models.py` | Dataclasses (Reminder, Event) | — |
-| `rappel/cli.py` | Point d'entrée `rappel` (start, status, install, stop) | `web`, `scheduler` |
-| `rappel/templates/` | HTML Jinja2 (HTMX) | — |
-| `rappel/static/` | CSS custom + Tailwind build + JS scènes | — |
+| `courant/web.py` | Routes FastAPI, sert templates Jinja | `service` |
+| `courant/scheduler.py` | Boucle APScheduler, planifie/replanifie les jobs | `service`, `notifier` |
+| `courant/notifier.py` | Wrapper `desktop-notifier` + callbacks d'actions | — |
+| `courant/service.py` | Logique métier (rappels, logs, stats) | `repository` |
+| `courant/repository.py` | CRUD SQLite, migrations | — |
+| `courant/models.py` | Dataclasses (Reminder, Event) | — |
+| `courant/cli.py` | Point d'entrée `courant` (start, status, install, stop) | `web`, `scheduler` |
+| `courant/templates/` | HTML Jinja2 (HTMX) | — |
+| `courant/static/` | CSS custom + Tailwind build + JS scènes | — |
 
 ### Boundaries clés
 
@@ -216,14 +217,14 @@ service.handle_action(reminder_id, action_id)
 
 ### Vibe générale
 
-`rappel` est une fenêtre ouverte sur une scène apaisante. Le tracking est intégré à l'ambiance, pas au premier plan. L'utilisateur ouvre l'onglet pour la beauté, et voit ses stats par effet de bord.
+`Courant` est une fenêtre ouverte sur une scène apaisante. Le tracking est intégré à l'ambiance, pas au premier plan. L'utilisateur ouvre l'onglet pour la beauté, et voit ses stats par effet de bord.
 
 ### Stack frontend
 
 - **Templates Jinja2** (server-rendered)
 - **HTMX** (CDN, ~14KB) pour interactions sans page reload
 - **Tailwind CSS** (build statique committé, pas de Node requis pour utilisateurs)
-- **CSS custom** (`static/rappel.css`) pour glassmorphism + animations
+- **CSS custom** (`static/courant.css`) pour glassmorphism + animations
 - **Canvas JS léger** (~80 LOC) pour particules par scène
 - **Google Fonts** : Fraunces (display serif) + Inter (UI)
 
@@ -314,7 +315,7 @@ Mapping scènes → theme : `rainy-window: dark`, `ocean-depth: dark`, `sunset-b
 
 ### Player lo-fi (optionnel)
 
-Mini-pill flottante bas-droite. Sources : Pixabay Music CC0, téléchargées au premier launch dans `~/.cache/rappel/sounds/`.
+Mini-pill flottante bas-droite. Sources : Pixabay Music CC0, téléchargées au premier launch dans `~/.cache/courant/sounds/`.
 
 Pistes v1 : Pluie, Vagues, Café lo-fi, (silence).
 
@@ -336,20 +337,20 @@ L'app écoute sur `127.0.0.1` uniquement. Pas d'auth pour la v1. Accès LAN/mobi
 ### Emplacements XDG
 
 ```
-~/.config/rappel/
-  └─ config.toml          # config user (port, scène par défaut)
+~/.config/courant/
+  └─ config.toml           # config user (port, scène par défaut)
 
-~/.local/share/rappel/
-  ├─ rappel.db            # SQLite
-  └─ rappel.db.backup-*   # backups quotidiens, garde 7 derniers
+~/.local/share/courant/
+  ├─ courant.db            # SQLite
+  └─ courant.db.backup-*   # backups quotidiens, garde 7 derniers
 
-~/.cache/rappel/
-  ├─ sounds/              # audio téléchargé au runtime
+~/.cache/courant/
+  ├─ sounds/               # audio téléchargé au runtime
   └─ logs/
-     └─ rappel.log        # rotation à 5MB, garde 3 fichiers
+     └─ courant.log        # rotation à 5MB, garde 3 fichiers
 
 ~/.config/systemd/user/
-  └─ rappel.service       # créé par `rappel install`
+  └─ courant.service       # créé par `courant install`
 ```
 
 ### `config.toml`
@@ -396,17 +397,17 @@ def migrate(conn):
 
 ### Backups
 
-Au démarrage si dernier backup > 24h : copie de `rappel.db`, suppression des > 7 jours.
+Au démarrage si dernier backup > 24h : copie de `courant.db`, suppression des > 7 jours.
 
 ## Packaging & installation
 
 ### Distribution
 
-Python package via `pyproject.toml`, publié sur PyPI sous le nom **`rappel`** (vérifier dispo au premier publish ; fallback `rappel-app`).
+Python package via `pyproject.toml`, publié sur PyPI sous le nom **`courant`** (vérifier dispo au premier publish ; fallback `courant-app`).
 
 ```toml
 [project]
-name = "rappel"
+name = "courant"
 version = "0.1.0"
 description = "Un rappel cozy pour les devs : eau, yeux, étirements."
 readme = "README.md"
@@ -422,49 +423,49 @@ dependencies = [
 ]
 
 [project.scripts]
-rappel = "rappel.cli:main"
+courant = "courant.cli:main"
 ```
 
 ### Installation utilisateur
 
 ```bash
 # Recommandé
-pipx install rappel
-rappel install      # crée + enable le service systemd user
-rappel start        # démarre
+pipx install courant
+courant install      # crée + enable le service systemd user
+courant start        # démarre
 # → http://localhost:8765
 ```
 
 ### Sous-commandes CLI
 
 ```
-rappel start         # lance le serveur
-rappel stop          # arrête le service systemd
-rappel status        # status + URL
-rappel install       # crée + enable le service systemd user
-rappel uninstall     # supprime le service (garde les données)
-rappel purge         # supprime données aussi (avec confirmation)
-rappel version
-rappel logs          # tail des logs
+courant start         # lance le serveur
+courant stop          # arrête le service systemd
+courant status        # status + URL
+courant install       # crée + enable le service systemd user
+courant uninstall     # supprime le service (garde les données)
+courant purge         # supprime données aussi (avec confirmation)
+courant version
+courant logs          # tail des logs
 ```
 
 Implémentées avec `argparse` (stdlib).
 
 ### Service systemd user
 
-Généré par `rappel install` :
+Généré par `courant install` :
 
 ```ini
 [Unit]
-Description=rappel reminder service
+Description=Courant reminder service
 After=graphical-session.target
 
 [Service]
 Type=simple
-ExecStart=%h/.local/bin/rappel start
+ExecStart=%h/.local/bin/courant start
 Restart=on-failure
 RestartSec=5s
-Environment="RAPPEL_MANAGED_BY_SYSTEMD=1"
+Environment="COURANT_MANAGED_BY_SYSTEMD=1"
 
 [Install]
 WantedBy=default.target
@@ -473,8 +474,8 @@ WantedBy=default.target
 ### Structure du dépôt
 
 ```
-rappel/
-├── rappel/                   # package Python
+courant/
+├── courant/                  # package Python
 │   ├── __init__.py
 │   ├── cli.py
 │   ├── web.py
@@ -490,9 +491,9 @@ rappel/
 │   │   ├── stats.html
 │   │   └── settings.html
 │   ├── static/
-│   │   ├── rappel.css        # custom styles
+│   │   ├── courant.css       # custom styles
 │   │   ├── tailwind.css      # build statique committé
-│   │   ├── rappel.js         # HTMX helpers
+│   │   ├── courant.js        # HTMX helpers
 │   │   ├── scenes/           # un .js par scène
 │   │   ├── icons/            # PNG 256x256
 │   │   └── sounds/           # downloaded runtime, gitignored
@@ -519,7 +520,7 @@ rappel/
 
 ### CI minimale
 
-GitHub Actions : `ruff check`, `mypy rappel/`, `pytest tests/` (Python 3.11/3.12/3.13).
+GitHub Actions : `ruff check`, `mypy courant/`, `pytest tests/` (Python 3.11/3.12/3.13).
 
 ### Stratégie de tests
 
@@ -548,7 +549,7 @@ Structure :
 
 | Risque | Mitigation |
 |---|---|
-| Nom `rappel` indispo sur PyPI | Fallback `rappel-app` ; vérifier au premier publish |
+| Nom `courant` indispo sur PyPI | Fallback `courant-app` ; vérifier au premier publish |
 | `desktop-notifier` callbacks ne marchent pas sur certains DE non-GNOME | Tester sur Plasma/XFCE en early-access ; fallback notif sans action (log via UI uniquement) |
 | GNOME Wayland sans tray icon | Pas un problème : on n'a pas de tray. L'accès se fait via URL ou bookmark. |
 | Sons audio (3-4MB total) téléchargés au premier launch | Faire opt-in : ambient sound désactivé par défaut, l'utilisateur l'active depuis settings, ce qui déclenche le download |
