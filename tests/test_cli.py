@@ -1,6 +1,7 @@
 """Tests for the courant CLI."""
 from __future__ import annotations
 
+import os
 import signal
 import sqlite3
 import subprocess
@@ -63,3 +64,67 @@ def test_start_creates_db_and_seeds_default_reminders(
     tables = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
     conn.close()
     assert {"reminders", "events", "settings"}.issubset(tables)
+
+
+def test_status_when_no_db(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+):
+    """status exits 0 and explains no database when DB doesn't exist."""
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+    exit_code = main(["status"])
+    assert exit_code == 0
+    out = capsys.readouterr().out
+    assert "not initialized" in out.lower() or "no database" in out.lower()
+
+
+def test_status_with_db_shows_reminder_count(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+):
+    """status shows reminder rows when DB exists."""
+    import sqlite3 as _sqlite3
+    from courant.repository import connect, migrate
+
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+
+    # Create the DB directory and a DB with one reminder
+    db_dir = tmp_path / "data" / "courant"
+    db_dir.mkdir(parents=True)
+    db_file = db_dir / "courant.db"
+    conn = connect(str(db_file))
+    migrate(conn)
+    conn.execute(
+        "INSERT INTO reminders (name, message, interval_minutes, created_at, enabled) VALUES (?, ?, ?, ?, ?)",
+        ("Eau", "Bois de l'eau !", 60, "2026-01-01T00:00:00", 1),
+    )
+    conn.commit()
+    conn.close()
+
+    exit_code = main(["status"])
+    assert exit_code == 0
+    out = capsys.readouterr().out
+    assert "1" in out
+    assert "eau" in out.lower() or "reminder" in out.lower()
+
+
+def test_stop_when_no_systemd_prints_instructions(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+):
+    """stop exits 0 and gives Ctrl+C instructions when systemctl is absent."""
+    # Create an empty dir so PATH lookup finds nothing
+    empty_bin = tmp_path / "bin"
+    empty_bin.mkdir()
+    monkeypatch.setenv("PATH", str(empty_bin))
+
+    exit_code = main(["stop"])
+    assert exit_code == 0
+    out = capsys.readouterr().out
+    combined = out.lower()
+    assert "systemd" in combined or "ctrl" in combined

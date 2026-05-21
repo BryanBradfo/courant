@@ -8,7 +8,9 @@ from __future__ import annotations
 import argparse
 import logging
 import os
+import shutil
 import signal
+import subprocess
 import sys
 import time as time_module
 
@@ -80,6 +82,44 @@ def _run_daemon() -> int:
     return 0
 
 
+def _run_status() -> int:
+    db = db_path()
+    if not db.exists():
+        print("Courant not initialized (no database found).")
+        print(f"Expected at: {db}")
+        return 0
+    conn = connect(str(db))
+    rows = conn.execute(
+        "SELECT id, name, enabled FROM reminders ORDER BY id"
+    ).fetchall()
+    conn.close()
+    if not rows:
+        print("No reminders configured.")
+    else:
+        for row_id, name, enabled in rows:
+            state = "enabled" if enabled else "disabled"
+            print(f"  [{row_id:>2}] {name} ({state})")
+    return 0
+
+
+def _run_stop() -> int:
+    if shutil.which("systemctl") is None:
+        print(
+            "systemctl not found. "
+            "If you ran `courant start` in foreground, stop it with Ctrl+C."
+        )
+        return 0
+    result = subprocess.run(
+        ["systemctl", "--user", "stop", "courant.service"],
+        check=False,
+    )
+    if result.returncode == 0:
+        print("Courant service stopped.")
+    else:
+        print("No running Courant service found (or stop failed).")
+    return 0
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="courant",
@@ -110,7 +150,12 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "start":
         return _run_daemon()
 
-    # stop/status implemented in subsequent tasks
+    if args.command == "status":
+        return _run_status()
+
+    if args.command == "stop":
+        return _run_stop()
+
     print(f"command '{args.command}' not yet implemented", file=sys.stderr)
     return 1
 
