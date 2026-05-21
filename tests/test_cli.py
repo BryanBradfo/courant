@@ -62,8 +62,10 @@ def test_start_creates_db_and_seeds_default_reminders(
     assert db.exists()
     conn = sqlite3.connect(db)
     tables = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
-    conn.close()
     assert {"reminders", "events", "settings"}.issubset(tables)
+    rows = conn.execute("SELECT id FROM reminders").fetchall()
+    conn.close()
+    assert len(rows) == 3, f"Expected 3 seeded reminders, got {len(rows)}"
 
 
 def test_status_when_no_db(

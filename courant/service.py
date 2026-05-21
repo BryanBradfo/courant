@@ -7,12 +7,14 @@ or called from outside (cli.py wires them together).
 """
 from __future__ import annotations
 
+import importlib.resources
+import json
 import sqlite3
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
-from courant.models import Event, Reminder, Weekday
+from courant.models import Event, Reminder, Weekday, parse_active_days, parse_time
 from courant.repository import (
     delete_reminder,
     get_reminder,
@@ -152,6 +154,43 @@ class ReminderService:
             kind=kind,  # type: ignore[arg-type]
             value=value,
         ))
+
+    def seed_defaults_if_empty(self) -> int:
+        """Seed default reminders from data/default_reminders.json if no reminders exist.
+
+        Returns the number of reminders seeded (0 if DB already had reminders).
+        """
+        if list_reminders(self._conn):
+            return 0
+
+        ref = importlib.resources.files("courant.data").joinpath("default_reminders.json")
+        with ref.open("r", encoding="utf-8") as fh:
+            entries = json.load(fh)
+
+        count = 0
+        for entry in entries:
+            reminder = Reminder(
+                id=None,
+                name=entry["name"],
+                message=entry["message"],
+                icon=entry.get("icon"),
+                interval_minutes=entry["interval_minutes"],
+                active_hours=(
+                    parse_time(entry["active_hours_start"]),
+                    parse_time(entry["active_hours_end"]),
+                ),
+                active_days=parse_active_days(entry["active_days"]),
+                enabled=True,
+                tracked=entry.get("tracked", False),
+                unit_label=entry.get("unit_label"),
+                unit_amount=entry.get("unit_amount"),
+                daily_goal=entry.get("daily_goal"),
+                created_at=datetime.now(),
+                paused_until=None,
+            )
+            self.create_reminder(reminder)
+            count += 1
+        return count
 
     def daily_progress(self, reminder_id: int, now: datetime | None = None) -> DailyProgress:
         now = now or datetime.now()

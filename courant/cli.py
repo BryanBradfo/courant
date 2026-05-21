@@ -55,6 +55,9 @@ def _run_daemon() -> int:
     migrate(conn)
 
     service = ReminderService(conn)
+    seeded = service.seed_defaults_if_empty()
+    if seeded > 0:
+        logger.info("Seeded %d default reminders on first launch", seeded)
     notifier = _build_notifier()
     apsched = BackgroundScheduler()
     rs = ReminderScheduler(scheduler=apsched, service=service, notifier=notifier)

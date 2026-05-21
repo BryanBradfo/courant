@@ -225,3 +225,24 @@ def test_daily_progress_for_untracked_reminder_has_no_goal(service: ReminderServ
     progress = service.daily_progress(rid, now=datetime(2026, 5, 21, 12, 0))
     assert progress.goal is None
     assert progress.percent is None
+
+
+def test_seed_default_reminders_on_empty_db(service: ReminderService):
+    """seed_defaults_if_empty inserts 3 reminders into an empty DB."""
+    count = service.seed_defaults_if_empty()
+    assert count == 3
+    reminders = service.list_reminders()
+    assert len(reminders) == 3
+    names = [r.name for r in reminders]
+    assert "Boire de l'eau" in names
+    assert "Pause yeux (20-20-20)" in names
+    assert "Étirements" in names
+
+
+def test_seed_default_reminders_is_noop_when_not_empty(service: ReminderService):
+    """seed_defaults_if_empty is a no-op (returns 0) when reminders already exist."""
+    service.create_reminder(_new_reminder("Existing"))
+    count = service.seed_defaults_if_empty()
+    assert count == 0
+    # Only the originally-created reminder remains
+    assert len(service.list_reminders()) == 1
