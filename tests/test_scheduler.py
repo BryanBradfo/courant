@@ -143,3 +143,62 @@ def test_sync_jobs_preserves_next_run_when_unchanged(
     second_job = stopped_scheduler.get_job("reminder-1")
     assert second_job is not None
     assert id(second_job.trigger) == first_trigger_id  # same trigger object => not recreated
+
+
+import threading  # noqa: E402
+import time as time_module  # noqa: E402
+
+from courant.notifier import FakeNotifier  # noqa: E402
+from courant.repository import list_events_for_reminder  # noqa: E402
+
+
+def test_scheduler_fires_from_worker_thread(
+    memory_db: sqlite3.Connection,
+):
+    """Regression: APScheduler runs jobs in worker threads, but service/repository
+    use the connection created in the main thread. Must not raise
+    sqlite3.ProgrammingError about cross-thread usage.
+    """
+    # Use a real file-based DB rather than :memory: because :memory: connections
+    # cannot be shared even with check_same_thread=False (each connection sees
+    # its own :memory: DB). This test verifies the cross-thread fix in connect().
+    import tempfile
+    from pathlib import Path
+    from courant.repository import connect
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        db_path = Path(tmpdir) / "test.db"
+        conn = connect(str(db_path))
+        migrate(conn)
+
+        service = ReminderService(conn)
+        rid = service.create_reminder(_new_reminder("Threading test", interval=1))
+
+        notifier = FakeNotifier()
+        sched = BackgroundScheduler()
+        rs = ReminderScheduler(scheduler=sched, service=service, notifier=notifier)
+        rs.sync_jobs()
+
+        # Override the interval to fire almost immediately (300ms from now)
+        from datetime import datetime, timedelta
+        rs.schedule_once(rid, datetime.now() + timedelta(milliseconds=300))
+
+        try:
+            rs.start()
+            # Give the scheduler up to 3 seconds to fire the one-shot job
+            for _ in range(30):
+                if notifier.calls:
+                    break
+                time_module.sleep(0.1)
+        finally:
+            rs.shutdown()
+            conn.close()
+
+        assert len(notifier.calls) >= 1, (
+            "Scheduler worker thread should fire notification without "
+            "sqlite3 cross-thread error"
+        )
+        # Verify the event was logged (proves the worker thread successfully
+        # wrote to the DB through the cross-thread connection)
+        events = list_events_for_reminder(connect(str(db_path)), rid)
+        assert any(e.kind == "fired" for e in events)

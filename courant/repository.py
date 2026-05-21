@@ -211,8 +211,15 @@ def set_setting(conn: sqlite3.Connection, key: str, value: str) -> None:
 
 
 def connect(db_path: str) -> sqlite3.Connection:
-    """Open a connection with sane defaults for Courant."""
-    conn = sqlite3.connect(db_path)
+    """Open a connection with sane defaults for Courant.
+
+    `check_same_thread=False` is required because APScheduler runs jobs in
+    worker threads while our service code uses a single connection passed
+    in from cli.py. SQLite itself is thread-safe in serialized mode (default),
+    and with max_instances=1 on our jobs + the GIL serializing Python-level
+    SQL execution, we don't hit concurrent-write issues at our scale.
+    """
+    conn = sqlite3.connect(db_path, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     return conn
