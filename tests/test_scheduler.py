@@ -104,3 +104,24 @@ def test_sync_jobs_removes_jobs_for_disabled_reminders(
     service.update_reminder(r)
     rs.sync_jobs()
     assert stopped_scheduler.get_job(f"reminder-{rid}") is None
+
+
+def test_sync_jobs_preserves_next_run_when_unchanged(
+    memory_db: sqlite3.Connection, stopped_scheduler: BackgroundScheduler,
+):
+    """If a reminder's interval is unchanged, sync_jobs should NOT recreate the job."""
+    migrate(memory_db)
+    service = ReminderService(memory_db)
+    service.create_reminder(_new_reminder("A", interval=30))
+
+    rs = ReminderScheduler(scheduler=stopped_scheduler, service=service, notifier=MagicMock())
+    rs.sync_jobs()
+    first_job = stopped_scheduler.get_job("reminder-1")
+    assert first_job is not None
+    # Capture trigger identity — should be the same object after a no-op sync
+    first_trigger_id = id(first_job.trigger)
+
+    rs.sync_jobs()  # No reminder changes; job should not be recreated
+    second_job = stopped_scheduler.get_job("reminder-1")
+    assert second_job is not None
+    assert id(second_job.trigger) == first_trigger_id  # same trigger object => not recreated

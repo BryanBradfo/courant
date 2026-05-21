@@ -5,6 +5,8 @@ On every sync_jobs(), we add/update active reminders and remove stale ones.
 """
 from __future__ import annotations
 
+from datetime import timedelta
+
 from apscheduler.schedulers.base import BaseScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
@@ -51,7 +53,11 @@ class ReminderScheduler:
             assert r.id is not None
             jid = _job_id(r.id)
             existing = self._scheduler.get_job(jid)
+            new_interval = timedelta(minutes=r.interval_minutes)
             if existing is not None:
+                existing_interval = getattr(existing.trigger, "interval", None)
+                if existing_interval == new_interval:
+                    continue  # unchanged, no need to reset next-run-time
                 self._scheduler.remove_job(jid)
             self._scheduler.add_job(
                 func=self._fire,
