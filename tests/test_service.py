@@ -183,3 +183,45 @@ def test_handle_action_unknown_is_silently_ignored(service: ReminderService):
 def test_handle_action_missing_reminder_silently_ignored(service: ReminderService):
     # Should not raise
     service.handle_action(9999, "ack")
+
+
+from courant.service import DailyProgress
+
+
+def test_daily_progress_counts_acked_events_today(service: ReminderService):
+    r = _new_reminder()
+    r.daily_goal = 8
+    rid = service.create_reminder(r)
+    today = datetime(2026, 5, 21, 12, 0)
+
+    # Today: 3 acked
+    for h in [9, 10, 11]:
+        service.handle_action(rid, "ack", now=today.replace(hour=h))
+    # Yesterday: 5 acked (should not count)
+    yesterday = today.replace(day=20)
+    for h in [9, 10, 11, 12, 13]:
+        service.handle_action(rid, "ack", now=yesterday.replace(hour=h))
+
+    progress = service.daily_progress(rid, now=today)
+    assert progress.count == 3
+    assert progress.goal == 8
+    assert progress.percent == pytest.approx(37.5)
+
+
+def test_daily_progress_ignores_non_ack_events(service: ReminderService):
+    rid = service.create_reminder(_new_reminder())
+    today = datetime(2026, 5, 21, 12, 0)
+    service.handle_action(rid, "snooze", now=today)
+    service.handle_action(rid, "dismissed", now=today)
+    progress = service.daily_progress(rid, now=today)
+    assert progress.count == 0
+
+
+def test_daily_progress_for_untracked_reminder_has_no_goal(service: ReminderService):
+    r = _new_reminder()
+    r.tracked = False
+    r.daily_goal = None
+    rid = service.create_reminder(r)
+    progress = service.daily_progress(rid, now=datetime(2026, 5, 21, 12, 0))
+    assert progress.goal is None
+    assert progress.percent is None

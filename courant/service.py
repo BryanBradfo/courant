@@ -9,7 +9,8 @@ from __future__ import annotations
 
 import sqlite3
 from collections.abc import Callable
-from datetime import datetime
+from dataclasses import dataclass
+from datetime import datetime, timedelta
 
 from courant.models import Event, Reminder, Weekday
 from courant.repository import (
@@ -17,9 +18,18 @@ from courant.repository import (
     get_reminder,
     insert_event,
     insert_reminder,
+    list_events_in_range,
     list_reminders,
     update_reminder,
 )
+
+
+@dataclass
+class DailyProgress:
+    reminder_id: int
+    count: int
+    goal: int | None
+    percent: float | None
 
 
 class ReminderService:
@@ -142,3 +152,17 @@ class ReminderService:
             kind=kind,  # type: ignore[arg-type]
             value=value,
         ))
+
+    def daily_progress(self, reminder_id: int, now: datetime | None = None) -> DailyProgress:
+        now = now or datetime.now()
+        r = self.get_reminder(reminder_id)
+        if r is None:
+            return DailyProgress(reminder_id, 0, None, None)
+
+        start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        end = start + timedelta(days=1)
+        events = list_events_in_range(self._conn, start, end, reminder_id=reminder_id)
+        count = sum(1 for e in events if e.kind == "acked")
+        goal = r.daily_goal if r.tracked else None
+        percent = (count / goal * 100) if (goal and goal > 0) else None
+        return DailyProgress(reminder_id, count, goal, percent)
