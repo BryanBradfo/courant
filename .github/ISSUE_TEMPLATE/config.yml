@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and discussions
+    url: https://github.com/BryanBradfo/courant/discussions
+    about: For open-ended questions, ideas, or anything that isn't a bug or a specific feature request.
