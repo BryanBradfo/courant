@@ -40,7 +40,7 @@ All reminders fire only between 09:00–18:00 on weekdays by default. You can cu
 
 ## Installing the ambient scenes
 
-Courant uses 6 looping background videos (~110 MB total) for the cozy aesthetic. They are not bundled in the repo — fetch them with :
+Courant uses 6 looping background videos (~10 MB total, re-encoded from larger originals) for the cozy aesthetic. They are not bundled in the repo — fetch them with :
 
     courant install-scenes
 

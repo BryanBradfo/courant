@@ -56,7 +56,7 @@ def _run_daemon() -> int:
     if missing:
         names = ", ".join(m.slug for m in missing)
         logger.info(
-            "%d scene videos missing (%s). Run `courant install-scenes` to fetch them (~110 MB).",
+            "%d scene videos missing (%s). Run `courant install-scenes` to fetch them (~10 MB).",
             len(missing), names,
         )
 
@@ -155,7 +155,7 @@ def _build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser("status", help="Show daemon status and URL")
     subparsers.add_parser(
         "install-scenes",
-        help="Download the 6 default ambient scene videos (~110 MB total)",
+        help="Download the 6 default ambient scene videos (~10 MB total)",
     )
 
     return parser
