@@ -145,7 +145,6 @@ def test_sync_jobs_preserves_next_run_when_unchanged(
     assert id(second_job.trigger) == first_trigger_id  # same trigger object => not recreated
 
 
-import threading  # noqa: E402
 import time as time_module  # noqa: E402
 
 from courant.notifier import FakeNotifier  # noqa: E402
@@ -164,6 +163,7 @@ def test_scheduler_fires_from_worker_thread(
     # its own :memory: DB). This test verifies the cross-thread fix in connect().
     import tempfile
     from pathlib import Path
+
     from courant.repository import connect
 
     with tempfile.TemporaryDirectory() as tmpdir:
