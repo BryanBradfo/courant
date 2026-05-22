@@ -14,7 +14,7 @@ Linux desktop app that fires customizable system notifications and tracks your d
 ## Quick start (dev)
 
 ```bash
-git clone https://github.com/<user>/courant
+git clone https://github.com/BryanBradfo/courant
 cd courant
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
