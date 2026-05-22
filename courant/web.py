@@ -16,6 +16,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from courant.models import Reminder, format_active_days, parse_active_days, parse_time
+from courant.repository import get_setting, set_setting
 from courant.service import ReminderService
 
 _PACKAGE_DIR = Path(__file__).parent
@@ -174,6 +175,22 @@ def create_app(service: ReminderService) -> FastAPI:
         return templates.TemplateResponse(
             request, "stats.html", {"reminders": reminders, "progresses": progresses},
         )
+
+    @app.get("/settings", response_class=HTMLResponse)
+    async def settings_page(request: Request) -> HTMLResponse:
+        snooze = get_setting(service._conn, "snooze_minutes", default="10")
+        return templates.TemplateResponse(
+            request, "settings.html", {"snooze_minutes": snooze},
+        )
+
+    @app.post("/settings")
+    async def settings_post(
+        snooze_minutes: int = Form(...),
+    ) -> RedirectResponse:
+        if snooze_minutes < 1:
+            raise HTTPException(status_code=400, detail="snooze_minutes must be >= 1")
+        set_setting(service._conn, "snooze_minutes", str(snooze_minutes))
+        return RedirectResponse(url="/settings", status_code=303)
 
     @app.post("/reminders/{reminder_id}/toggle", response_class=HTMLResponse)
     async def toggle_reminder(request: Request, reminder_id: int) -> HTMLResponse:

@@ -280,3 +280,29 @@ async def test_stats_page_shows_per_reminder_today(memory_db: sqlite3.Connection
     assert resp.status_code == 200
     assert "Water" in resp.text
     assert "3" in resp.text  # today's count
+
+
+# --- Task 11: /settings page ---
+
+async def test_settings_page_shows_snooze_value(memory_db: sqlite3.Connection):
+    migrate(memory_db)
+    service = ReminderService(memory_db)
+    app = create_app(service)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        resp = await client.get("/settings")
+    assert resp.status_code == 200
+    assert "Snooze" in resp.text
+    assert "10" in resp.text  # default snooze minutes
+
+
+async def test_settings_post_updates_value(memory_db: sqlite3.Connection):
+    migrate(memory_db)
+    service = ReminderService(memory_db)
+    app = create_app(service)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        resp = await client.post("/settings", data={"snooze_minutes": "15"}, follow_redirects=False)
+    assert resp.status_code in (302, 303)
+    from courant.repository import get_setting
+    assert get_setting(memory_db, "snooze_minutes") == "15"
