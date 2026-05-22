@@ -20,21 +20,24 @@
   <!-- HTMX for interactivity -->
   <script src="https://unpkg.com/htmx.org@2.0.4"></script>
 </head>
-<body class="bg-slate-50 text-slate-900 min-h-screen">
-  <nav class="bg-white border-b border-slate-200">
-    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-      <a href="/" class="text-xl font-semibold">Courant</a>
-      <div class="flex gap-6 text-sm">
-        <a href="/" class="hover:text-blue-600">Dashboard</a>
-        <a href="/reminders" class="hover:text-blue-600">Reminders</a>
-        <a href="/stats" class="hover:text-blue-600">Stats</a>
-        <a href="/settings" class="hover:text-blue-600">Settings</a>
-      </div>
+<body class="scene-dark"
+      data-scene="{{ current_scene or 'ocean-depth' }}">
+  <canvas id="scene-canvas"></canvas>
+
+  <nav class="cozy-nav">
+    <a href="/" class="brand">Courant</a>
+    <div class="flex gap-6 text-sm">
+      <a href="/">Dashboard</a>
+      <a href="/reminders">Reminders</a>
+      <a href="/stats">Stats</a>
+      <a href="/settings">Settings</a>
     </div>
   </nav>
 
   <main class="max-w-4xl mx-auto px-4 py-8">
     {% block content %}{% endblock %}
   </main>
+
+  <script type="module" src="/static/scene-loader.js"></script>
 </body>
 </html>
