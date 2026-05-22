@@ -1,0 +1,255 @@
+"""SQLite repository for Courant. Stdlib sqlite3 only, no ORM."""
+from __future__ import annotations
+
+import shutil
+import sqlite3
+import time
+from datetime import datetime
+from pathlib import Path
+
+from courant.models import (
+    Event,
+    Reminder,
+    format_active_days,
+    format_time,
+    parse_active_days,
+    parse_time,
+)
+
+SCHEMA_VERSION = 1
+
+_MIGRATIONS: dict[int, str] = {
+    1: """
+        CREATE TABLE reminders (
+            id                 INTEGER PRIMARY KEY,
+            name               TEXT NOT NULL,
+            message            TEXT NOT NULL,
+            icon               TEXT,
+            interval_minutes   INTEGER NOT NULL,
+            active_hours_start TEXT NOT NULL DEFAULT '09:00',
+            active_hours_end   TEXT NOT NULL DEFAULT '18:00',
+            active_days        TEXT NOT NULL DEFAULT 'mon,tue,wed,thu,fri',
+            enabled            INTEGER NOT NULL DEFAULT 1,
+            tracked            INTEGER NOT NULL DEFAULT 0,
+            unit_label         TEXT,
+            unit_amount        INTEGER,
+            daily_goal         INTEGER,
+            created_at         TEXT NOT NULL,
+            paused_until       TEXT
+        );
+
+        CREATE TABLE events (
+            id          INTEGER PRIMARY KEY,
+            reminder_id INTEGER NOT NULL REFERENCES reminders(id) ON DELETE CASCADE,
+            occurred_at TEXT NOT NULL,
+            kind        TEXT NOT NULL CHECK(kind IN ('fired', 'acked', 'snoozed', 'dismissed')),
+            value       INTEGER
+        );
+
+        CREATE INDEX idx_events_reminder_time ON events(reminder_id, occurred_at);
+
+        CREATE TABLE settings (
+            key   TEXT PRIMARY KEY,
+            value TEXT NOT NULL
+        );
+    """,
+}
+
+
+def migrate(conn: sqlite3.Connection) -> None:
+    """Apply pending migrations idempotently. Safe to call on every startup."""
+    current = conn.execute("PRAGMA user_version").fetchone()[0]
+    for version in range(current + 1, SCHEMA_VERSION + 1):
+        conn.executescript(_MIGRATIONS[version])
+        conn.execute(f"PRAGMA user_version = {version}")
+    conn.commit()
+
+
+def _row_to_reminder(row: sqlite3.Row) -> Reminder:
+    return Reminder(
+        id=row["id"],
+        name=row["name"],
+        message=row["message"],
+        icon=row["icon"],
+        interval_minutes=row["interval_minutes"],
+        active_hours=(parse_time(row["active_hours_start"]), parse_time(row["active_hours_end"])),
+        active_days=parse_active_days(row["active_days"]),
+        enabled=bool(row["enabled"]),
+        tracked=bool(row["tracked"]),
+        unit_label=row["unit_label"],
+        unit_amount=row["unit_amount"],
+        daily_goal=row["daily_goal"],
+        created_at=datetime.fromisoformat(row["created_at"]),
+        paused_until=datetime.fromisoformat(row["paused_until"]) if row["paused_until"] else None,
+    )
+
+
+def insert_reminder(conn: sqlite3.Connection, r: Reminder) -> int:
+    cursor = conn.execute(
+        """
+        INSERT INTO reminders (
+            name, message, icon, interval_minutes,
+            active_hours_start, active_hours_end, active_days,
+            enabled, tracked, unit_label, unit_amount, daily_goal,
+            created_at, paused_until
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            r.name, r.message, r.icon, r.interval_minutes,
+            format_time(r.active_hours[0]), format_time(r.active_hours[1]),
+            format_active_days(r.active_days),
+            int(r.enabled), int(r.tracked),
+            r.unit_label, r.unit_amount, r.daily_goal,
+            r.created_at.isoformat(),
+            r.paused_until.isoformat() if r.paused_until else None,
+        ),
+    )
+    conn.commit()
+    return cursor.lastrowid  # type: ignore[return-value]
+
+
+def get_reminder(conn: sqlite3.Connection, reminder_id: int) -> Reminder | None:
+    row = conn.execute("SELECT * FROM reminders WHERE id = ?", (reminder_id,)).fetchone()
+    return _row_to_reminder(row) if row else None
+
+
+def list_reminders(conn: sqlite3.Connection) -> list[Reminder]:
+    rows = conn.execute("SELECT * FROM reminders ORDER BY id").fetchall()
+    return [_row_to_reminder(row) for row in rows]
+
+
+def update_reminder(conn: sqlite3.Connection, r: Reminder) -> None:
+    if r.id is None:
+        raise ValueError("Cannot update Reminder without id")
+    conn.execute(
+        """
+        UPDATE reminders SET
+            name = ?, message = ?, icon = ?, interval_minutes = ?,
+            active_hours_start = ?, active_hours_end = ?, active_days = ?,
+            enabled = ?, tracked = ?, unit_label = ?, unit_amount = ?, daily_goal = ?,
+            paused_until = ?
+        WHERE id = ?
+        """,
+        (
+            r.name, r.message, r.icon, r.interval_minutes,
+            format_time(r.active_hours[0]), format_time(r.active_hours[1]),
+            format_active_days(r.active_days),
+            int(r.enabled), int(r.tracked),
+            r.unit_label, r.unit_amount, r.daily_goal,
+            r.paused_until.isoformat() if r.paused_until else None,
+            r.id,
+        ),
+    )
+    conn.commit()
+
+
+def delete_reminder(conn: sqlite3.Connection, reminder_id: int) -> None:
+    conn.execute("DELETE FROM reminders WHERE id = ?", (reminder_id,))
+    conn.commit()
+
+
+def _row_to_event(row: sqlite3.Row) -> Event:
+    return Event(
+        id=row["id"],
+        reminder_id=row["reminder_id"],
+        occurred_at=datetime.fromisoformat(row["occurred_at"]),
+        kind=row["kind"],
+        value=row["value"],
+    )
+
+
+def insert_event(conn: sqlite3.Connection, e: Event) -> int:
+    cursor = conn.execute(
+        "INSERT INTO events (reminder_id, occurred_at, kind, value) VALUES (?, ?, ?, ?)",
+        (e.reminder_id, e.occurred_at.isoformat(), e.kind, e.value),
+    )
+    conn.commit()
+    return cursor.lastrowid  # type: ignore[return-value]
+
+
+def list_events_for_reminder(conn: sqlite3.Connection, reminder_id: int) -> list[Event]:
+    rows = conn.execute(
+        "SELECT * FROM events WHERE reminder_id = ? ORDER BY occurred_at",
+        (reminder_id,),
+    ).fetchall()
+    return [_row_to_event(row) for row in rows]
+
+
+def list_events_in_range(
+    conn: sqlite3.Connection,
+    start: datetime,
+    end: datetime,
+    reminder_id: int | None = None,
+) -> list[Event]:
+    """Events where start <= occurred_at < end. Optionally filtered by reminder."""
+    if reminder_id is None:
+        rows = conn.execute(
+            "SELECT * FROM events WHERE occurred_at >= ? AND occurred_at < ? ORDER BY occurred_at",
+            (start.isoformat(), end.isoformat()),
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            "SELECT * FROM events WHERE reminder_id = ? AND occurred_at >= ? AND occurred_at < ? "
+            "ORDER BY occurred_at",
+            (reminder_id, start.isoformat(), end.isoformat()),
+        ).fetchall()
+    return [_row_to_event(row) for row in rows]
+
+
+def get_setting(conn: sqlite3.Connection, key: str, default: str | None = None) -> str | None:
+    row = conn.execute("SELECT value FROM settings WHERE key = ?", (key,)).fetchone()
+    return row["value"] if row else default
+
+
+def set_setting(conn: sqlite3.Connection, key: str, value: str) -> None:
+    conn.execute(
+        "INSERT INTO settings (key, value) VALUES (?, ?) "
+        "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+        (key, value),
+    )
+    conn.commit()
+
+
+def connect(db_path: str) -> sqlite3.Connection:
+    """Open a connection with sane defaults for Courant.
+
+    `check_same_thread=False` is required because APScheduler runs jobs in
+    worker threads while our service code uses a single connection passed
+    in from cli.py. SQLite itself is thread-safe in serialized mode (default),
+    and with max_instances=1 on our jobs + the GIL serializing Python-level
+    SQL execution, we don't hit concurrent-write issues at our scale.
+    """
+    conn = sqlite3.connect(db_path, check_same_thread=False)
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON")
+    return conn
+
+
+def backup_if_stale(db_path: Path, max_age_hours: int = 24, retain: int = 7) -> Path | None:
+    """Create a timestamped backup if the most recent one is older than max_age_hours.
+
+    Prunes backups beyond `retain` count (newest kept). Returns the new backup path,
+    or None if no backup was created (too recent).
+    """
+    if not db_path.exists():
+        return None
+
+    parent = db_path.parent
+    pattern = f"{db_path.name}.backup-*"
+    existing = sorted(parent.glob(pattern), key=lambda p: p.stat().st_mtime, reverse=True)
+
+    if existing:
+        most_recent_age_h = (time.time() - existing[0].stat().st_mtime) / 3600
+        if most_recent_age_h < max_age_hours:
+            return None
+
+    timestamp = time.strftime("%Y%m%d-%H%M%S")
+    backup_path = parent / f"{db_path.name}.backup-{timestamp}"
+    shutil.copy2(db_path, backup_path)
+
+    # Prune
+    all_backups = sorted(parent.glob(pattern), key=lambda p: p.stat().st_mtime, reverse=True)
+    for old in all_backups[retain:]:
+        old.unlink()
+
+    return backup_path
