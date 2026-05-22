@@ -66,4 +66,11 @@ def create_app(service: ReminderService) -> FastAPI:
             {"r": r, "progress": progress},
         )
 
+    @app.get("/reminders", response_class=HTMLResponse)
+    async def reminders_list(request: Request) -> HTMLResponse:
+        reminders = service.list_reminders()
+        return templates.TemplateResponse(
+            request, "reminders.html", {"reminders": reminders},
+        )
+
     return app

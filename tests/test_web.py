@@ -101,3 +101,29 @@ async def test_post_event_unknown_kind_400(memory_db: sqlite3.Connection):
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         resp = await client.post(f"/api/events", data={"reminder_id": rid, "kind": "bogus"})
     assert resp.status_code == 400
+
+
+async def test_reminders_page_lists_all(memory_db: sqlite3.Connection):
+    migrate(memory_db)
+    service = ReminderService(memory_db)
+    service.create_reminder(_make_reminder("Water"))
+    service.create_reminder(_make_reminder("Stretch", tracked=False))
+    app = create_app(service)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        resp = await client.get("/reminders")
+    assert resp.status_code == 200
+    assert "Water" in resp.text
+    assert "Stretch" in resp.text
+    assert "Add reminder" in resp.text or "New reminder" in resp.text
+
+
+async def test_reminders_page_empty_state(memory_db: sqlite3.Connection):
+    migrate(memory_db)
+    service = ReminderService(memory_db)
+    app = create_app(service)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        resp = await client.get("/reminders")
+    assert resp.status_code == 200
+    assert "No reminders" in resp.text or "no reminders" in resp.text.lower()
