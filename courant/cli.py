@@ -51,6 +51,15 @@ def _run_daemon() -> int:
     conn = connect(str(db_path()))
     migrate(conn)
 
+    from courant.scene_downloader import missing_scenes
+    missing = missing_scenes()
+    if missing:
+        names = ", ".join(m.slug for m in missing)
+        logger.info(
+            "%d scene videos missing (%s). Run `courant install-scenes` to fetch them (~110 MB).",
+            len(missing), names,
+        )
+
     service = ReminderService(conn)
     seeded = service.seed_defaults_if_empty()
     if seeded > 0:
@@ -72,6 +81,24 @@ def _run_daemon() -> int:
         rs.shutdown()
         conn.close()
     return 0
+
+
+def _run_install_scenes() -> int:
+    from courant.scene_downloader import install_all, missing_scenes
+    missing = missing_scenes()
+    if not missing:
+        print("All scenes already installed.")
+        return 0
+    print(f"Installing {len(missing)} missing scenes to {missing[0].local_path.parent}")
+    print()
+    succeeded, total = install_all(only_missing=True)
+    print()
+    if succeeded == total:
+        print(f"✓ Installed {succeeded} scenes successfully.")
+        return 0
+    else:
+        print(f"⚠ {succeeded}/{total} scenes installed (some failed — check logs).")
+        return 1
 
 
 def _run_status() -> int:
@@ -126,6 +153,10 @@ def _build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser("start", help="Start the daemon (foreground)")
     subparsers.add_parser("stop", help="Stop the systemd-managed daemon")
     subparsers.add_parser("status", help="Show daemon status and URL")
+    subparsers.add_parser(
+        "install-scenes",
+        help="Download the 6 default ambient scene videos (~110 MB total)",
+    )
 
     return parser
 
@@ -150,6 +181,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "stop":
         return _run_stop()
+
+    if args.command == "install-scenes":
+        return _run_install_scenes()
 
     print(f"command '{args.command}' not yet implemented", file=sys.stderr)
     return 1

@@ -38,6 +38,16 @@ On first launch, three default reminders are seeded:
 
 All reminders fire only between 09:00–18:00 on weekdays by default. You can customize all of this from the web UI at <http://localhost:8765/reminders> while the daemon is running, or directly in the SQLite database at `~/.local/share/courant/courant.db`.
 
+## Installing the ambient scenes
+
+Courant uses 6 looping background videos (~110 MB total) for the cozy aesthetic. They are not bundled in the repo — fetch them with :
+
+    courant install-scenes
+
+Progress is shown per scene. Files land in `~/.local/share/courant/videos/`. If some downloads fail, re-run the command — it skips already-installed scenes.
+
+Until you install them, you'll see a fallback gradient background.
+
 ## Usage
 
 After `courant start`, point your browser at <http://localhost:8765> :

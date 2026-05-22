@@ -2,6 +2,7 @@
   "night-train": {
     "name": "Night train",
     "url": "/videos/night-train.mp4",
+    "download_url": "https://github.com/BryanBradfo/courant/releases/download/scenes-v1/night-train.mp4",
     "theme": "dark",
     "author": "Pixabay contributor",
     "license": "Pixabay Content License",
@@ -10,6 +11,7 @@
   "lofi-study": {
     "name": "Lo-fi study",
     "url": "/videos/lofi-study.mp4",
+    "download_url": "https://github.com/BryanBradfo/courant/releases/download/scenes-v1/lofi-study.mp4",
     "theme": "dark",
     "author": "Pixabay contributor",
     "license": "Pixabay Content License",
@@ -18,6 +20,7 @@
   "cozy-cabin": {
     "name": "Cozy cabin",
     "url": "/videos/cozy-cabin.mp4",
+    "download_url": "https://github.com/BryanBradfo/courant/releases/download/scenes-v1/cozy-cabin.mp4",
     "theme": "dark",
     "author": "Pixabay contributor",
     "license": "Pixabay Content License",
@@ -26,6 +29,7 @@
   "cat-sunrise": {
     "name": "Cat at sunrise",
     "url": "/videos/cat-sunrise.mp4",
+    "download_url": "https://github.com/BryanBradfo/courant/releases/download/scenes-v1/cat-sunrise.mp4",
     "theme": "light",
     "author": "Pixabay contributor",
     "license": "Pixabay Content License",
@@ -34,6 +38,7 @@
   "cat-rain-night": {
     "name": "Cat in rain",
     "url": "/videos/cat-rain-night.mp4",
+    "download_url": "https://github.com/BryanBradfo/courant/releases/download/scenes-v1/cat-rain-night.mp4",
     "theme": "dark",
     "author": "Pixabay contributor",
     "license": "Pixabay Content License",
@@ -42,6 +47,7 @@
   "retro-moon": {
     "name": "Retro moon",
     "url": "/videos/retro-moon.mp4",
+    "download_url": "https://github.com/BryanBradfo/courant/releases/download/scenes-v1/retro-moon.mp4",
     "theme": "dark",
     "author": "Pixabay contributor",
     "license": "Pixabay Content License",
