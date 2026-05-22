@@ -57,5 +57,18 @@
 
   <script src="/static/scene-loader.js"></script>
   <script src="/static/audio-player.js"></script>
+  <script>
+    // Reload the page right after midnight so tracked-reminder counters
+    // reset their displayed value to 0 for the new day. The underlying
+    // query already filters by today's range; this just keeps a long-open
+    // tab in sync without the user having to refresh manually.
+    (function scheduleMidnightReload() {
+      const now = new Date();
+      const nextMidnight = new Date(
+        now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 5
+      );
+      setTimeout(() => location.reload(), nextMidnight - now);
+    })();
+  </script>
 </body>
 </html>

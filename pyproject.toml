@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "courant"
-version = "0.1.1"
-description = "A cozy reminder for developers — drink water, rest your eyes, stretch."
+version = "0.1.2"
+description = "Cozy reminders for developers to drink water, rest eyes, and stretch."
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.11"
