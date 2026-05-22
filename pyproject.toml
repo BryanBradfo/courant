@@ -12,6 +12,20 @@ requires-python = ">=3.11"
 authors = [
     { name = "Bryan Chen", email = "bryan.chen@wingleet.com" },
 ]
+keywords = ["reminder", "linux", "desktop", "notifications", "wellness", "lofi", "cozy"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Environment :: Web Environment",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Office/Business :: Scheduling",
+]
 dependencies = [
     "apscheduler>=3.10",
     "desktop-notifier>=4.0",
@@ -20,6 +34,13 @@ dependencies = [
     "jinja2>=3.1",
     "python-multipart>=0.0.9",
 ]
+
+[project.urls]
+Homepage      = "https://github.com/BryanBradfo/courant"
+Issues        = "https://github.com/BryanBradfo/courant/issues"
+Documentation = "https://github.com/BryanBradfo/courant#readme"
+Source        = "https://github.com/BryanBradfo/courant"
+Changelog     = "https://github.com/BryanBradfo/courant/releases"
 
 [project.optional-dependencies]
 dev = [
