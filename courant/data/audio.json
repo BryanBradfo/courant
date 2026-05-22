@@ -1,34 +1,50 @@
 {
-  "rain": {
-    "name": "Rain",
-    "url": "/audio/rain.mp3",
-    "download_url": "https://github.com/BryanBradfo/courant/releases/download/audio-v1/rain.mp3",
-    "author": "Pixabay contributor",
+  "cozy-night": {
+    "name": "Cozy Night",
+    "url": "/audio/cozy-night.mp3",
+    "download_url": "https://github.com/BryanBradfo/courant/releases/download/audio-v1/cozy-night.mp3",
+    "author": "fassounds",
     "license": "Pixabay Content License",
-    "source": "https://pixabay.com/sound-effects/search/rain/"
+    "source": "https://pixabay.com/music/beats-good-night-lofi-cozy-chill-music-160166/"
   },
-  "ocean": {
-    "name": "Ocean waves",
-    "url": "/audio/ocean.mp3",
-    "download_url": "https://github.com/BryanBradfo/courant/releases/download/audio-v1/ocean.mp3",
-    "author": "Pixabay contributor",
+  "mellow": {
+    "name": "Mellow Lofi",
+    "url": "/audio/mellow.mp3",
+    "download_url": "https://github.com/BryanBradfo/courant/releases/download/audio-v1/mellow.mp3",
+    "author": "leberch",
     "license": "Pixabay Content License",
-    "source": "https://pixabay.com/sound-effects/search/ocean/"
+    "source": "https://pixabay.com/music/beats-lofi-516620/"
   },
-  "cafe": {
-    "name": "Café ambiance",
-    "url": "/audio/cafe.mp3",
-    "download_url": "https://github.com/BryanBradfo/courant/releases/download/audio-v1/cafe.mp3",
-    "author": "Pixabay contributor",
+  "study": {
+    "name": "Study Time",
+    "url": "/audio/study.mp3",
+    "download_url": "https://github.com/BryanBradfo/courant/releases/download/audio-v1/study.mp3",
+    "author": "Lofi Music Library",
     "license": "Pixabay Content License",
-    "source": "https://pixabay.com/sound-effects/search/cafe/"
+    "source": "https://pixabay.com/music/beats-lofi-ambient-study-lofi-music-455378/"
   },
-  "fireplace": {
-    "name": "Fireplace",
-    "url": "/audio/fireplace.mp3",
-    "download_url": "https://github.com/BryanBradfo/courant/releases/download/audio-v1/fireplace.mp3",
-    "author": "Pixabay contributor",
+  "focus": {
+    "name": "Deep Focus",
+    "url": "/audio/focus.mp3",
+    "download_url": "https://github.com/BryanBradfo/courant/releases/download/audio-v1/focus.mp3",
+    "author": "pulsebox",
     "license": "Pixabay Content License",
-    "source": "https://pixabay.com/sound-effects/search/fireplace/"
+    "source": "https://pixabay.com/music/beats-lofi-production-522875/"
+  },
+  "daydream": {
+    "name": "Daydream",
+    "url": "/audio/daydream.mp3",
+    "download_url": "https://github.com/BryanBradfo/courant/releases/download/audio-v1/daydream.mp3",
+    "author": "pulsebox",
+    "license": "Pixabay Content License",
+    "source": "https://pixabay.com/music/beats-lofi-vlog-522887/"
+  },
+  "jazzy": {
+    "name": "Jazzy Love",
+    "url": "/audio/jazzy.mp3",
+    "download_url": "https://github.com/BryanBradfo/courant/releases/download/audio-v1/jazzy.mp3",
+    "author": "sonican",
+    "license": "Pixabay Content License",
+    "source": "https://pixabay.com/music/beats-lo-fi-music-loop-sentimental-jazzy-love-473154/"
   }
 }
