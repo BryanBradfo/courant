@@ -32,6 +32,10 @@ def log_path() -> Path:
     return cache_dir() / "logs" / "courant.log"
 
 
+def videos_dir() -> Path:
+    return data_dir() / "videos"
+
+
 def ensure_dirs() -> None:
-    for d in (config_dir(), data_dir(), cache_dir(), cache_dir() / "logs"):
+    for d in (config_dir(), data_dir(), cache_dir(), cache_dir() / "logs", videos_dir()):
         d.mkdir(parents=True, exist_ok=True)

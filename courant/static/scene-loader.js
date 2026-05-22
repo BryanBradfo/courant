@@ -18,7 +18,7 @@ async function loadRegistry() {
 async function loadScene(slug) {
   if (!video) return;
   const scene = scenes[slug];
-  if (!scene || !scene.url || scene.url.startsWith('PLACEHOLDER')) {
+  if (!scene || !scene.url) {
     console.warn(`Scene "${slug}" has no usable URL — showing fallback`);
     video.style.opacity = '0';
     document.body.classList.remove('scene-dark', 'scene-light');

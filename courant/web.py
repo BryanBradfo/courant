@@ -17,6 +17,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from courant.models import Reminder, format_active_days, parse_active_days, parse_time
+from courant.paths import videos_dir
 from courant.repository import get_setting, set_setting
 from courant.service import ReminderService
 
@@ -54,6 +55,10 @@ def create_app(service: ReminderService) -> FastAPI:
 
     templates = Jinja2Templates(directory=str(_TEMPLATES_DIR))
     app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static")
+
+    videos_path = videos_dir()
+    videos_path.mkdir(parents=True, exist_ok=True)
+    app.mount("/videos", StaticFiles(directory=str(videos_path)), name="videos")
 
     @app.get("/api/health")
     async def health() -> dict[str, str]:
