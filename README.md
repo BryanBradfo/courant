@@ -11,7 +11,7 @@ Linux desktop app that fires customizable system notifications and tracks your d
 ## Status
 
 - ✅ Phase 1 — Core CLI + desktop notifications working end-to-end
-- ⏳ Phase 2 — Web UI (FastAPI + HTMX)
+- ✅ Phase 2 — Functional web UI (FastAPI + HTMX, Tailwind utility classes)
 - ⏳ Phase 3 — Cozy aesthetic with ambient scenes (rain, ocean, sunset…)
 - ⏳ Phase 4 — Polish, systemd integration, PyPI release
 
@@ -37,6 +37,17 @@ On first launch, three default reminders are seeded:
 | Stretch | 90 min | No |
 
 All reminders fire only between 09:00–18:00 on weekdays by default. You can customize all of this directly in the SQLite database at `~/.local/share/courant/courant.db` until the web UI lands.
+
+## Usage
+
+After `courant start`, point your browser at <http://localhost:8765> :
+
+- **Dashboard** — see each reminder's daily progress and click `+1` to log a hit
+- **Reminders** — create / edit / disable / delete reminders
+- **Stats** — daily progress per reminder
+- **Settings** — global preferences (e.g. snooze duration)
+
+Notifications fire on the desktop via D-Bus as configured. Clicking a notification action ("+1 glass" or "Snooze 10 min") records an event in the same database the web UI reads from — both views stay in sync.
 
 ## Tests
 
