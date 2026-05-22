@@ -36,7 +36,8 @@ def create_app(service: ReminderService) -> FastAPI:
     )
 
     def _base_context() -> dict[str, str]:
-        current_scene = get_setting(service._conn, "current_scene", default="ocean-depth")
+        raw = get_setting(service._conn, "current_scene", default="ocean-depth")
+        current_scene: str = raw or "ocean-depth"
         return {"current_scene": current_scene}
 
     templates = Jinja2Templates(directory=str(_TEMPLATES_DIR))
@@ -84,10 +85,13 @@ def create_app(service: ReminderService) -> FastAPI:
 
     @app.get("/reminders/new", response_class=HTMLResponse)
     async def new_reminder_form(request: Request) -> HTMLResponse:
-        return templates.TemplateResponse(
-            request, "reminder_form.html",
-            {**_base_context(), "reminder": None, "is_new": True, "active_days_csv": "mon,tue,wed,thu,fri"},
-        )
+        ctx = {
+            **_base_context(),
+            "reminder": None,
+            "is_new": True,
+            "active_days_csv": "mon,tue,wed,thu,fri",
+        }
+        return templates.TemplateResponse(request, "reminder_form.html", ctx)
 
     @app.post("/reminders")
     async def create_reminder(
@@ -179,9 +183,8 @@ def create_app(service: ReminderService) -> FastAPI:
     async def stats_page(request: Request) -> HTMLResponse:
         reminders = service.list_reminders()
         progresses = {r.id: service.daily_progress(r.id) for r in reminders if r.id is not None}
-        return templates.TemplateResponse(
-            request, "stats.html", {**_base_context(), "reminders": reminders, "progresses": progresses},
-        )
+        ctx = {**_base_context(), "reminders": reminders, "progresses": progresses}
+        return templates.TemplateResponse(request, "stats.html", ctx)
 
     @app.get("/settings", response_class=HTMLResponse)
     async def settings_page(request: Request) -> HTMLResponse:

@@ -6,14 +6,14 @@
 
 > A cozy reminder for developers — drink water, rest your eyes, stretch.
 
-Linux desktop app that fires customizable system notifications, tracks your daily progress, and serves a small web UI on `localhost:8765` for CRUD and stats. A cozy lo-fi aesthetic with ambient scenes is coming in Phase 3. The product name "Courant" means *current* / *flow* in French — the gentle stream that nudges you toward healthier breaks.
+Linux desktop app that fires customizable system notifications, tracks your daily progress, and serves a small web UI on `localhost:8765` for CRUD and stats. The UI features a full-screen ambient scene (ocean depth, rain, sunset, forest, or night sky) with a glassmorphism panel on top. The product name "Courant" means *current* / *flow* in French — the gentle stream that nudges you toward healthier breaks.
 
 ## Status
 
 - ✅ Phase 1 — Core CLI + desktop notifications working end-to-end
-- ✅ Phase 2 — Functional web UI (FastAPI + HTMX, Tailwind utility classes)
-- ⏳ Phase 3 — Cozy aesthetic with ambient scenes (rain, ocean, sunset…)
-- ⏳ Phase 4 — Polish, systemd integration, PyPI release
+- ✅ Phase 2 — Functional web UI (FastAPI + HTMX)
+- ✅ Phase 3 — Cozy aesthetic with ambient scenes (ocean, rain, sunset, forest, night)
+- ⏳ Phase 4 — Polish, systemd integration, ambient audio, PyPI release
 
 ## Quick start (dev)
 
@@ -49,6 +49,20 @@ After `courant start`, point your browser at <http://localhost:8765> :
 
 Notifications fire on the desktop via D-Bus as configured. Clicking a notification action ("+1 glass" or "Snooze 10 min") records an event in the same database the web UI reads from — both views stay in sync.
 
+## Scenes
+
+Courant ships with 5 ambient scenes you can choose from in Settings :
+
+| Scene | Vibe |
+|---|---|
+| Ocean depth | Bubbles rising through a deep-blue gradient |
+| Rainy window | Diagonal rain streaks on a gray-blue sky with a warm glow indoors |
+| Sunset beach | Orange-violet sky with animated waves |
+| Forest stream | Autumn leaves falling through green god-rays |
+| Calm night | Twinkling stars and a moon glow |
+
+Want to add your own ? See [`docs/ADDING_A_SCENE.md`](docs/ADDING_A_SCENE.md).
+
 ## Tests
 
 ```bash
@@ -64,7 +78,7 @@ This is a phased build. See [`docs/superpowers/specs/`](docs/superpowers/specs/)
 Contributions are welcome — especially:
 
 - **Translations** of user-facing strings and design docs
-- **New ambient scenes** for Phase 3 (each scene is a small CSS + Canvas module — see `docs/ADDING_A_SCENE.md` when Phase 3 lands)
+- **New ambient scenes** (each scene is a self-contained Canvas module — see [`docs/ADDING_A_SCENE.md`](docs/ADDING_A_SCENE.md))
 - **Bug reports** from running on non-GNOME desktops (Plasma, XFCE, Hyprland…)
 
 ## License
