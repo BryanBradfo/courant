@@ -3,31 +3,35 @@
 {% block title %}Settings — Courant{% endblock %}
 
 {% block content %}
-<h1 class="text-2xl font-bold mb-6">Settings</h1>
+<div class="flex justify-center pt-12">
+  <div class="panel panel-narrow w-full">
+    <h1 class="display-1 mb-6">Settings</h1>
 
-<form method="post" action="/settings"
-      class="bg-white rounded-lg border border-slate-200 p-6 space-y-4 max-w-md">
-  <div>
-    <label class="block text-sm font-medium mb-1">
-      Snooze duration (minutes)
-    </label>
-    <input name="snooze_minutes" type="number" min="1" required
-           value="{{ snooze_minutes }}"
-           class="w-full border border-slate-300 rounded px-3 py-2">
-    <p class="text-xs text-slate-500 mt-1">
-      How long to delay a reminder when you click "Snooze" on a notification.
-    </p>
+    <form method="post" action="/settings" class="space-y-4">
+      <div>
+        <label class="block mb-1">Snooze duration (minutes)</label>
+        <input name="snooze_minutes" type="number" min="1" required value="{{ snooze_minutes }}">
+        <p class="text-xs mt-1" style="color: var(--text-muted)">
+          How long to delay a reminder when you click "Snooze" on a notification.
+        </p>
+      </div>
+
+      <div>
+        <label class="block mb-1">Ambient scene</label>
+        <select name="current_scene"
+                class="cozy-select w-full px-3 py-2 rounded-lg">
+          {% for slug in available_scenes %}
+            <option value="{{ slug }}" {% if slug == current_scene %}selected{% endif %}>
+              {{ scenes_meta[slug].name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="pt-4 border-t border-white/10">
+        <button type="submit" class="btn-cozy btn-cozy-primary">Save</button>
+      </div>
+    </form>
   </div>
-
-  <div class="pt-4 border-t border-slate-200">
-    <button type="submit"
-            class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-      Save
-    </button>
-  </div>
-</form>
-
-<p class="text-sm text-slate-500 mt-6">
-  More settings (theme, notification timeout, scene selection) coming in Phase 3.
-</p>
+</div>
 {% endblock %}

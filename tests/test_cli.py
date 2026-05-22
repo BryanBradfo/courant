@@ -164,3 +164,22 @@ def test_stop_when_no_systemd_prints_instructions(
     out = capsys.readouterr().out
     combined = out.lower()
     assert "systemd" in combined or "ctrl" in combined
+
+
+def test_install_scenes_when_all_present(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str],
+):
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path))
+    videos_dir = tmp_path / "courant" / "videos"
+    videos_dir.mkdir(parents=True)
+    # Pretend all 6 scenes are installed
+    slugs = (
+        "night-train", "lofi-study", "cozy-cabin", "cat-sunrise", "cat-rain-night", "retro-moon"
+    )
+    for slug in slugs:
+        (videos_dir / f"{slug}.mp4").write_bytes(b"fake")
+
+    exit_code = main(["install-scenes"])
+    assert exit_code == 0
+    out = capsys.readouterr().out
+    assert "already installed" in out.lower()

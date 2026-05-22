@@ -302,7 +302,25 @@ async def test_settings_post_updates_value(memory_db: sqlite3.Connection):
     app = create_app(service)
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-        resp = await client.post("/settings", data={"snooze_minutes": "15"}, follow_redirects=False)
+        resp = await client.post(
+            "/settings",
+            data={"snooze_minutes": "15", "current_scene": "night-train"},
+            follow_redirects=False,
+        )
     assert resp.status_code in (302, 303)
     from courant.repository import get_setting
     assert get_setting(memory_db, "snooze_minutes") == "15"
+    assert get_setting(memory_db, "current_scene") == "night-train"
+
+
+async def test_settings_post_rejects_unknown_scene(memory_db: sqlite3.Connection):
+    migrate(memory_db)
+    service = ReminderService(memory_db)
+    app = create_app(service)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        resp = await client.post(
+            "/settings",
+            data={"snooze_minutes": "10", "current_scene": "non-existent-scene"},
+        )
+    assert resp.status_code == 400

@@ -7,6 +7,7 @@ in-memory DB).
 """
 from __future__ import annotations
 
+import json
 from datetime import datetime
 from pathlib import Path
 
@@ -16,12 +17,26 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from courant.models import Reminder, format_active_days, parse_active_days, parse_time
+from courant.paths import videos_dir
 from courant.repository import get_setting, set_setting
 from courant.service import ReminderService
 
 _PACKAGE_DIR = Path(__file__).parent
 _TEMPLATES_DIR = _PACKAGE_DIR / "templates"
 _STATIC_DIR = _PACKAGE_DIR / "static"
+
+
+def _load_scenes_registry() -> dict[str, dict[str, str]]:
+    """Load the video scenes registry from the bundled JSON."""
+    from importlib import resources
+    from typing import cast
+
+    with resources.files("courant.data").joinpath("scenes.json").open("r") as f:
+        return cast(dict[str, dict[str, str]], json.load(f))
+
+
+_SCENES_REGISTRY = _load_scenes_registry()
+AVAILABLE_SCENES = tuple(_SCENES_REGISTRY.keys())
 
 
 def create_app(service: ReminderService) -> FastAPI:
@@ -33,12 +48,25 @@ def create_app(service: ReminderService) -> FastAPI:
         redoc_url=None,
     )
 
+    def _base_context() -> dict[str, str]:
+        raw = get_setting(service._conn, "current_scene", default="cozy-cabin")
+        current_scene: str = raw or "cozy-cabin"
+        return {"current_scene": current_scene}
+
     templates = Jinja2Templates(directory=str(_TEMPLATES_DIR))
     app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static")
+
+    videos_path = videos_dir()
+    videos_path.mkdir(parents=True, exist_ok=True)
+    app.mount("/videos", StaticFiles(directory=str(videos_path)), name="videos")
 
     @app.get("/api/health")
     async def health() -> dict[str, str]:
         return {"status": "ok"}
+
+    @app.get("/api/scenes")
+    async def api_scenes() -> dict[str, dict[str, str]]:
+        return _SCENES_REGISTRY
 
     @app.get("/", response_class=HTMLResponse)
     async def dashboard(request: Request) -> HTMLResponse:
@@ -47,7 +75,7 @@ def create_app(service: ReminderService) -> FastAPI:
         return templates.TemplateResponse(
             request,
             "dashboard.html",
-            {"reminders": reminders, "progresses": progresses},
+            {**_base_context(), "reminders": reminders, "progresses": progresses},
         )
 
     @app.post("/api/events", response_class=HTMLResponse)
@@ -66,22 +94,25 @@ def create_app(service: ReminderService) -> FastAPI:
         return templates.TemplateResponse(
             request,
             "partials/reminder_card.html",
-            {"r": r, "progress": progress},
+            {**_base_context(), "r": r, "progress": progress},
         )
 
     @app.get("/reminders", response_class=HTMLResponse)
     async def reminders_list(request: Request) -> HTMLResponse:
         reminders = service.list_reminders()
         return templates.TemplateResponse(
-            request, "reminders.html", {"reminders": reminders},
+            request, "reminders.html", {**_base_context(), "reminders": reminders},
         )
 
     @app.get("/reminders/new", response_class=HTMLResponse)
     async def new_reminder_form(request: Request) -> HTMLResponse:
-        return templates.TemplateResponse(
-            request, "reminder_form.html",
-            {"reminder": None, "is_new": True, "active_days_csv": "mon,tue,wed,thu,fri"},
-        )
+        ctx = {
+            **_base_context(),
+            "reminder": None,
+            "is_new": True,
+            "active_days_csv": "mon,tue,wed,thu,fri",
+        }
+        return templates.TemplateResponse(request, "reminder_form.html", ctx)
 
     @app.post("/reminders")
     async def create_reminder(
@@ -125,6 +156,7 @@ def create_app(service: ReminderService) -> FastAPI:
         return templates.TemplateResponse(
             request, "reminder_form.html",
             {
+                **_base_context(),
                 "reminder": r,
                 "is_new": False,
                 "active_days_csv": format_active_days(r.active_days),
@@ -172,24 +204,35 @@ def create_app(service: ReminderService) -> FastAPI:
     async def stats_page(request: Request) -> HTMLResponse:
         reminders = service.list_reminders()
         progresses = {r.id: service.daily_progress(r.id) for r in reminders if r.id is not None}
-        return templates.TemplateResponse(
-            request, "stats.html", {"reminders": reminders, "progresses": progresses},
-        )
+        ctx = {**_base_context(), "reminders": reminders, "progresses": progresses}
+        return templates.TemplateResponse(request, "stats.html", ctx)
 
     @app.get("/settings", response_class=HTMLResponse)
     async def settings_page(request: Request) -> HTMLResponse:
         snooze = get_setting(service._conn, "snooze_minutes", default="10")
+        current_scene = get_setting(service._conn, "current_scene", default="cozy-cabin")
         return templates.TemplateResponse(
-            request, "settings.html", {"snooze_minutes": snooze},
+            request, "settings.html",
+            {
+                **_base_context(),
+                "snooze_minutes": snooze,
+                "current_scene": current_scene,
+                "available_scenes": AVAILABLE_SCENES,
+                "scenes_meta": _SCENES_REGISTRY,
+            },
         )
 
     @app.post("/settings")
     async def settings_post(
         snooze_minutes: int = Form(...),
+        current_scene: str = Form(...),
     ) -> RedirectResponse:
         if snooze_minutes < 1:
             raise HTTPException(status_code=400, detail="snooze_minutes must be >= 1")
+        if current_scene not in AVAILABLE_SCENES:
+            raise HTTPException(status_code=400, detail=f"Unknown scene: {current_scene}")
         set_setting(service._conn, "snooze_minutes", str(snooze_minutes))
+        set_setting(service._conn, "current_scene", current_scene)
         return RedirectResponse(url="/settings", status_code=303)
 
     @app.post("/reminders/{reminder_id}/toggle", response_class=HTMLResponse)
@@ -200,7 +243,7 @@ def create_app(service: ReminderService) -> FastAPI:
         r.enabled = not r.enabled
         service.update_reminder(r)
         return templates.TemplateResponse(
-            request, "partials/reminder_row.html", {"r": r},
+            request, "partials/reminder_row.html", {**_base_context(), "r": r},
         )
 
     return app
