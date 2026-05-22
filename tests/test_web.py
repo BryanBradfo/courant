@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 import sqlite3
+from datetime import datetime, time
 
 import pytest
 from httpx import ASGITransport, AsyncClient
 
+from courant.models import Reminder, Weekday
 from courant.repository import migrate
 from courant.service import ReminderService
 from courant.web import create_app
@@ -19,22 +21,20 @@ def app_with_empty_db(memory_db: sqlite3.Connection):
 
 
 async def test_health_endpoint(app_with_empty_db):
-    async with AsyncClient(transport=ASGITransport(app=app_with_empty_db), base_url="http://test") as client:
+    transport = ASGITransport(app=app_with_empty_db)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
         resp = await client.get("/api/health")
     assert resp.status_code == 200
     assert resp.json() == {"status": "ok"}
 
 
 async def test_dashboard_renders(app_with_empty_db):
-    async with AsyncClient(transport=ASGITransport(app=app_with_empty_db), base_url="http://test") as client:
+    transport = ASGITransport(app=app_with_empty_db)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
         resp = await client.get("/")
     assert resp.status_code == 200
     assert "Courant" in resp.text
     assert "text/html" in resp.headers["content-type"]
-
-
-from datetime import datetime, time
-from courant.models import Reminder, Weekday
 
 
 def _make_reminder(name: str, tracked: bool = True) -> Reminder:
@@ -86,7 +86,7 @@ async def test_post_event_ack_increments_progress(memory_db: sqlite3.Connection)
     app = create_app(service)
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-        resp = await client.post(f"/api/events", data={"reminder_id": rid, "kind": "ack"})
+        resp = await client.post("/api/events", data={"reminder_id": rid, "kind": "ack"})
     assert resp.status_code == 200
     # The response is the updated card HTML (HTMX swap target)
     assert "1 / 8" in resp.text or "1/8" in resp.text
@@ -99,7 +99,7 @@ async def test_post_event_unknown_kind_400(memory_db: sqlite3.Connection):
     app = create_app(service)
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-        resp = await client.post(f"/api/events", data={"reminder_id": rid, "kind": "bogus"})
+        resp = await client.post("/api/events", data={"reminder_id": rid, "kind": "bogus"})
     assert resp.status_code == 400
 
 
