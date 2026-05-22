@@ -23,6 +23,8 @@ _PACKAGE_DIR = Path(__file__).parent
 _TEMPLATES_DIR = _PACKAGE_DIR / "templates"
 _STATIC_DIR = _PACKAGE_DIR / "static"
 
+AVAILABLE_SCENES = ("ocean-depth", "rainy-window", "sunset-beach", "forest-stream", "calm-night")
+
 
 def create_app(service: ReminderService) -> FastAPI:
     app = FastAPI(
@@ -184,8 +186,15 @@ def create_app(service: ReminderService) -> FastAPI:
     @app.get("/settings", response_class=HTMLResponse)
     async def settings_page(request: Request) -> HTMLResponse:
         snooze = get_setting(service._conn, "snooze_minutes", default="10")
+        current_scene = get_setting(service._conn, "current_scene", default="ocean-depth")
         return templates.TemplateResponse(
-            request, "settings.html", {**_base_context(), "snooze_minutes": snooze},
+            request, "settings.html",
+            {
+                **_base_context(),
+                "snooze_minutes": snooze,
+                "current_scene": current_scene,
+                "available_scenes": AVAILABLE_SCENES,
+            },
         )
 
     @app.post("/settings")
