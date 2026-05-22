@@ -54,7 +54,7 @@ async function loadScene(slug) {
 
 (async () => {
   await loadRegistry();
-  const initial = document.body.dataset.scene || 'night-train';
+  const initial = document.body.dataset.scene || 'cozy-cabin';
   await loadScene(initial);
 })();
 

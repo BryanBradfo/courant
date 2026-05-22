@@ -49,8 +49,8 @@ def create_app(service: ReminderService) -> FastAPI:
     )
 
     def _base_context() -> dict[str, str]:
-        raw = get_setting(service._conn, "current_scene", default="night-train")
-        current_scene: str = raw or "night-train"
+        raw = get_setting(service._conn, "current_scene", default="cozy-cabin")
+        current_scene: str = raw or "cozy-cabin"
         return {"current_scene": current_scene}
 
     templates = Jinja2Templates(directory=str(_TEMPLATES_DIR))
@@ -210,7 +210,7 @@ def create_app(service: ReminderService) -> FastAPI:
     @app.get("/settings", response_class=HTMLResponse)
     async def settings_page(request: Request) -> HTMLResponse:
         snooze = get_setting(service._conn, "snooze_minutes", default="10")
-        current_scene = get_setting(service._conn, "current_scene", default="night-train")
+        current_scene = get_setting(service._conn, "current_scene", default="cozy-cabin")
         return templates.TemplateResponse(
             request, "settings.html",
             {
