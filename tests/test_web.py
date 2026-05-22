@@ -127,3 +127,102 @@ async def test_reminders_page_empty_state(memory_db: sqlite3.Connection):
         resp = await client.get("/reminders")
     assert resp.status_code == 200
     assert "No reminders" in resp.text or "no reminders" in resp.text.lower()
+
+
+# --- Task 6: New reminder form + POST /reminders ---
+
+async def test_new_reminder_form_renders(memory_db: sqlite3.Connection):
+    migrate(memory_db)
+    service = ReminderService(memory_db)
+    app = create_app(service)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        resp = await client.get("/reminders/new")
+    assert resp.status_code == 200
+    assert "<form" in resp.text
+    assert 'name="name"' in resp.text
+    assert 'name="message"' in resp.text
+    assert 'name="interval_minutes"' in resp.text
+
+
+async def test_post_creates_reminder(memory_db: sqlite3.Connection):
+    migrate(memory_db)
+    service = ReminderService(memory_db)
+    app = create_app(service)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        resp = await client.post("/reminders", data={
+            "name": "Tea",
+            "message": "Tea time !",
+            "icon": "🍵",
+            "interval_minutes": "60",
+            "active_hours_start": "09:00",
+            "active_hours_end": "18:00",
+            "active_days": "mon,tue,wed,thu,fri",
+            "tracked": "on",
+            "unit_label": "cup",
+            "unit_amount": "200",
+            "daily_goal": "4",
+        }, follow_redirects=False)
+
+    # POST should redirect to /reminders after creation
+    assert resp.status_code in (302, 303)
+    # Verify it landed in the service
+    reminders = service.list_reminders()
+    assert any(r.name == "Tea" for r in reminders)
+
+
+async def test_post_missing_required_field_400(memory_db: sqlite3.Connection):
+    migrate(memory_db)
+    service = ReminderService(memory_db)
+    app = create_app(service)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        resp = await client.post("/reminders", data={"message": "no name"})
+    assert resp.status_code in (400, 422)
+
+
+# --- Task 7: Edit reminder form + POST update ---
+
+async def test_edit_form_prefills(memory_db: sqlite3.Connection):
+    migrate(memory_db)
+    service = ReminderService(memory_db)
+    rid = service.create_reminder(_make_reminder("Water"))
+    app = create_app(service)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        resp = await client.get(f"/reminders/{rid}/edit")
+    assert resp.status_code == 200
+    assert 'value="Water"' in resp.text
+
+
+async def test_post_updates_reminder(memory_db: sqlite3.Connection):
+    migrate(memory_db)
+    service = ReminderService(memory_db)
+    rid = service.create_reminder(_make_reminder("Water"))
+    app = create_app(service)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        resp = await client.post(f"/reminders/{rid}", data={
+            "name": "Water (updated)",
+            "message": "Drink !",
+            "interval_minutes": "30",
+            "active_hours_start": "10:00",
+            "active_hours_end": "17:00",
+            "active_days": "mon,tue,wed",
+        }, follow_redirects=False)
+    assert resp.status_code in (302, 303)
+    updated = service.get_reminder(rid)
+    assert updated is not None
+    assert updated.name == "Water (updated)"
+    assert updated.interval_minutes == 30
+
+
+async def test_edit_missing_reminder_404(memory_db: sqlite3.Connection):
+    migrate(memory_db)
+    service = ReminderService(memory_db)
+    app = create_app(service)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        resp = await client.get("/reminders/9999/edit")
+    assert resp.status_code == 404
