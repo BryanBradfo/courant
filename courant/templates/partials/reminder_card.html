@@ -1,16 +1,23 @@
-<div class="bg-white rounded-lg border border-slate-200 p-4" id="reminder-card-{{ r.id }}">
-  <div class="flex items-center gap-2 mb-2">
-    {% if r.icon %}<span class="text-2xl">{{ r.icon }}</span>{% endif %}
-    <h2 class="text-lg font-semibold">{{ r.name }}</h2>
+<div id="reminder-card-{{ r.id }}"
+     class="border-t border-white/10 pt-4 first:border-t-0 first:pt-0">
+  <div class="flex items-center justify-between mb-2">
+    <div class="flex items-center gap-3">
+      {% if r.icon %}<span class="text-2xl">{{ r.icon }}</span>{% endif %}
+      <h2 class="display-2">{{ r.name }}</h2>
+    </div>
+    {% if r.tracked and progress.goal %}
+      <span class="text-sm" style="color: var(--text-secondary)">
+        {{ progress.count }} / {{ progress.goal }}
+      </span>
+    {% endif %}
   </div>
+
   {% if r.tracked and progress.goal %}
-    <div class="mb-2">
-      <div class="text-sm text-slate-600">{{ progress.count }} / {{ progress.goal }} {{ r.unit_label }}{{ 'es' if r.unit_label and r.unit_label.endswith('s') else 's' }}</div>
-      <div class="bg-slate-100 rounded-full h-2 mt-1">
-        <div class="bg-blue-500 h-2 rounded-full" style="width: {{ [progress.percent or 0, 100]|min }}%"></div>
-      </div>
+    <div class="progress-track mb-3">
+      <div class="progress-fill" style="width: {{ [progress.percent or 0, 100]|min }}%"></div>
     </div>
   {% endif %}
+
   <div class="flex gap-2 mt-3">
     {% if r.tracked %}
       <button
@@ -18,13 +25,10 @@
         hx-vals='{"reminder_id": {{ r.id }}, "kind": "ack"}'
         hx-target="#reminder-card-{{ r.id }}"
         hx-swap="outerHTML"
-        class="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
-      >
+        onclick="this.classList.add('splashing'); setTimeout(() => this.classList.remove('splashing'), 600)"
+        class="btn-cozy btn-cozy-primary">
         +1 {{ r.unit_label or 'done' }}
       </button>
     {% endif %}
-    <button class="px-3 py-1 text-sm bg-slate-200 text-slate-700 rounded hover:bg-slate-300">
-      Pause 1h
-    </button>
   </div>
 </div>
