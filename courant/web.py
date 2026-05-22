@@ -17,7 +17,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from courant.models import Reminder, format_active_days, parse_active_days, parse_time
-from courant.paths import videos_dir
+from courant.paths import audio_dir, videos_dir
 from courant.repository import get_setting, set_setting
 from courant.service import ReminderService
 
@@ -37,6 +37,18 @@ def _load_scenes_registry() -> dict[str, dict[str, str]]:
 
 _SCENES_REGISTRY = _load_scenes_registry()
 AVAILABLE_SCENES = tuple(_SCENES_REGISTRY.keys())
+
+
+def _load_audio_registry() -> dict[str, dict[str, str]]:
+    """Load the audio tracks registry from the bundled JSON."""
+    from importlib import resources
+    from typing import cast
+
+    with resources.files("courant.data").joinpath("audio.json").open("r") as f:
+        return cast(dict[str, dict[str, str]], json.load(f))
+
+
+_AUDIO_REGISTRY = _load_audio_registry()
 
 
 def create_app(service: ReminderService) -> FastAPI:
@@ -60,6 +72,10 @@ def create_app(service: ReminderService) -> FastAPI:
     videos_path.mkdir(parents=True, exist_ok=True)
     app.mount("/videos", StaticFiles(directory=str(videos_path)), name="videos")
 
+    audio_path = audio_dir()
+    audio_path.mkdir(parents=True, exist_ok=True)
+    app.mount("/audio", StaticFiles(directory=str(audio_path)), name="audio")
+
     @app.get("/api/health")
     async def health() -> dict[str, str]:
         return {"status": "ok"}
@@ -67,6 +83,10 @@ def create_app(service: ReminderService) -> FastAPI:
     @app.get("/api/scenes")
     async def api_scenes() -> dict[str, dict[str, str]]:
         return _SCENES_REGISTRY
+
+    @app.get("/api/audio")
+    async def api_audio() -> dict[str, dict[str, str]]:
+        return _AUDIO_REGISTRY
 
     @app.get("/", response_class=HTMLResponse)
     async def dashboard(request: Request) -> HTMLResponse:

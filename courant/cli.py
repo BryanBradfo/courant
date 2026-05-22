@@ -200,6 +200,23 @@ def _run_stop() -> int:
     return 0
 
 
+def _run_install_audio() -> int:
+    from courant.audio_downloader import install_all, missing_tracks
+    missing = missing_tracks()
+    if not missing:
+        print("All audio tracks already installed.")
+        return 0
+    print(f"Installing {len(missing)} missing audio tracks")
+    succeeded, total = install_all(only_missing=True)
+    print()
+    if succeeded == total:
+        print(f"✓ Installed {succeeded} audio tracks successfully.")
+        return 0
+    else:
+        print(f"⚠ {succeeded}/{total} audio tracks installed (some failed — check logs).")
+        return 1
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="courant",
@@ -217,6 +234,7 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     subparsers.add_parser("install", help="Create + enable the systemd user service")
     subparsers.add_parser("uninstall", help="Disable + remove the systemd user service")
+    subparsers.add_parser("install-audio", help="Download ambient audio tracks")
 
     return parser
 
@@ -250,6 +268,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "uninstall":
         return _run_uninstall()
+
+    if args.command == "install-audio":
+        return _run_install_audio()
 
     print(f"command '{args.command}' not yet implemented", file=sys.stderr)
     return 1
