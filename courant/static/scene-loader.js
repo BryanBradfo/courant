@@ -1,79 +1,72 @@
-// scene-loader.js — dynamically loads scene modules and renders them on #scene-canvas.
+// scene-loader.js — manages the video background.
 //
-// A scene module exports default object {
-//   init(canvas, ctx),  // start animation loop, return cleanup function
-//   theme: 'dark' | 'light',
-// }
-//
-// init() should call requestAnimationFrame internally and return a cleanup fn
-// that cancels the loop. The loader manages crossfade between scenes.
+// Reads /api/scenes to know the registry, then loads the URL for the
+// currently selected scene (server-rendered in body.dataset.scene).
 
-const canvas = document.getElementById('scene-canvas');
-if (canvas) {
-  resizeCanvas();
-  window.addEventListener('resize', resizeCanvas);
-}
+const video = document.getElementById('scene-video');
+let scenes = {};
 
-let currentCleanup = null;
-
-function resizeCanvas() {
-  if (!canvas) return;
-  const dpr = window.devicePixelRatio || 1;
-  canvas.width = window.innerWidth * dpr;
-  canvas.height = window.innerHeight * dpr;
-  canvas.style.width = `${window.innerWidth}px`;
-  canvas.style.height = `${window.innerHeight}px`;
-  const ctx = canvas.getContext('2d');
-  if (ctx) ctx.scale(dpr, dpr);
-}
-
-async function loadScene(name) {
-  if (!canvas) return;
-
-  // Tear down previous scene
-  if (currentCleanup) {
-    try { currentCleanup(); } catch (e) { console.warn('scene cleanup error', e); }
-    currentCleanup = null;
-  }
-
-  // Crossfade: fade out, swap, fade in
-  canvas.style.opacity = '0';
-  await new Promise(resolve => setTimeout(resolve, 400));
-
-  // Clear canvas
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  let module;
+async function loadRegistry() {
   try {
-    module = await import(`/static/scenes/${name}.js`);
+    const resp = await fetch('/api/scenes');
+    scenes = await resp.json();
   } catch (e) {
-    console.error(`Failed to load scene "${name}"`, e);
-    canvas.style.opacity = '1';
+    console.warn('Failed to load scene registry', e);
+  }
+}
+
+async function loadScene(slug) {
+  if (!video) return;
+  const scene = scenes[slug];
+  if (!scene || !scene.url || scene.url.startsWith('PLACEHOLDER')) {
+    console.warn(`Scene "${slug}" has no usable URL — showing fallback`);
+    video.style.opacity = '0';
+    document.body.classList.remove('scene-dark', 'scene-light');
+    document.body.classList.add('scene-dark');
     return;
   }
 
-  const scene = module.default;
+  // Crossfade : fade out, swap src, wait for canplay, fade in
+  video.style.opacity = '0';
+  await new Promise(r => setTimeout(r, 400));
+
+  video.src = scene.url;
   document.body.classList.remove('scene-dark', 'scene-light');
   document.body.classList.add(scene.theme === 'light' ? 'scene-light' : 'scene-dark');
 
-  currentCleanup = scene.init(canvas, ctx);
-  canvas.style.opacity = '1';
+  // Wait for the first frame to be ready, then fade in
+  video.addEventListener('canplay', () => {
+    video.style.opacity = '1';
+  }, { once: true });
+
+  video.addEventListener('error', () => {
+    console.warn(`Failed to load video for scene "${slug}"`);
+    video.style.opacity = '0';  // Show gradient fallback
+  }, { once: true });
+
+  // Try to start playback
+  try {
+    await video.play();
+  } catch (e) {
+    console.warn('Video autoplay failed', e);
+  }
 }
 
-// Boot: read scene from body data attribute (server-rendered)
-const initialScene = document.body.dataset.scene || 'ocean-depth';
-loadScene(initialScene);
+(async () => {
+  await loadRegistry();
+  const initial = document.body.dataset.scene || 'night-train';
+  await loadScene(initial);
+})();
 
-// Pause animations when tab is hidden
+// Pause video when tab is hidden (battery friendliness)
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden && currentCleanup) {
-    currentCleanup();
-    currentCleanup = null;
-  } else if (!document.hidden && !currentCleanup) {
-    loadScene(document.body.dataset.scene || 'ocean-depth');
+  if (!video) return;
+  if (document.hidden) {
+    video.pause();
+  } else {
+    video.play().catch(() => {});
   }
 });
 
-// Expose for the scene selector
+// Expose for scene selector
 window.courantLoadScene = loadScene;

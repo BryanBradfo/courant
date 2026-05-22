@@ -34,17 +34,18 @@
 body {
   font-family: var(--font-ui);
   color: var(--text-primary);
-  background: #0a0a0a;  /* black until a scene loads */
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   min-height: 100vh;
   overflow-x: hidden;
 }
 
-/* Scene canvas takes the full viewport, sits behind everything */
-#scene-canvas {
+/* Scene video takes the full viewport, sits behind everything */
+#scene-video {
   position: fixed;
   inset: 0;
   width: 100vw;
   height: 100vh;
+  object-fit: cover;
   z-index: -1;
   transition: opacity 800ms ease-in-out;
 }
@@ -100,7 +101,7 @@ body {
 /* Reduce or disable animations for users who ask */
 @media (prefers-reduced-motion: reduce) {
   .panel { animation: none; }
-  #scene-canvas { transition: none; }
+  #scene-video { transition: none; }
   * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
 

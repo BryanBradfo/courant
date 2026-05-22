@@ -1,75 +1,60 @@
 # Adding a new ambient scene to Courant
 
-Each ambient scene is a single self-contained JavaScript file under
-`courant/static/scenes/`. The framework calls a small contract on it,
-nothing more. This is meant to be the most contributor-friendly entry
-point in the codebase.
+Scenes are looping videos that play full-screen behind the cozy panel.
+Adding a new one is a 2-step process : find a video and register it.
 
-## The contract
+## 1. Find a CC0 / permissively licensed video
 
-Your scene file must `export default` an object with two members :
+Good sources :
 
-```javascript
-export default {
-  theme: 'dark',   // or 'light' — controls the glassmorphism panel contrast
+- [Pixabay videos](https://pixabay.com/videos/)
+- [Pexels videos](https://www.pexels.com/videos/)
+- [Coverr](https://coverr.co/)
+- [Mixkit](https://mixkit.co/free-stock-video/)
 
-  init(canvas, ctx) {
-    // canvas : the DOM canvas element, already DPI-scaled
-    // ctx    : the 2D rendering context
+Search for the vibe you want : "rainy cafe", "night train", "cozy fireplace", etc.
 
-    // Set up your animation loop with requestAnimationFrame.
-    // Return a cleanup function that cancels the loop.
+Criteria :
+- Looping (or close — start/end frames similar)
+- 15-30 seconds
+- 720p or 1080p, MP4 (H.264)
+- Under 30 MB ideally
+- Subtle motion (no zoom, no cuts, no flashes)
+- No watermarks or text overlays
 
-    let raf = requestAnimationFrame(function loop() {
-      // ... draw your frame here ...
-      raf = requestAnimationFrame(loop);
-    });
+## 2. Extract the direct MP4 URL
 
-    return function cleanup() {
-      cancelAnimationFrame(raf);
-    };
-  },
-};
+On the Pixabay/Pexels page, right-click on the embedded video and
+copy the video URL. You should get something like
+`https://cdn.pixabay.com/video/.../file-12345-720.mp4`.
+
+## 3. Add to `courant/data/scenes.json`
+
+```json
+{
+  "your-slug-here": {
+    "name": "Display Name",
+    "url": "https://cdn.pixabay.com/video/...-720.mp4",
+    "theme": "dark",
+    "author": "Pixabay user @name",
+    "license": "Pixabay Content License",
+    "source": "https://pixabay.com/videos/your-video-page/"
+  }
+}
 ```
 
-## Helpers
+- `slug` : short, kebab-case, used in the URL and DB
+- `theme` : `dark` for night/dim scenes, `light` for bright scenes (controls panel contrast)
+- `author` and `license` get displayed on the `/credits` page
 
-`courant/static/scenes/_helpers.js` exposes :
+That's it. The scene appears in the dropdown automatically.
 
-- `gradient(ctx, w, h, stops)` — draws a vertical gradient fill across the canvas
-- `Particles` — a small particle pool (constructor takes count + spawn fn ; methods `update(updateFn, respawnPredicate)` and `draw(drawFn, ctx)`)
+## 4. Test locally
 
-Import them as `import { Particles, gradient } from './_helpers.js';`.
+```bash
+courant start
+```
 
-## Performance
-
-- Cap your loop at 30 fps for battery friendliness. The existing scenes use a `lastFrame` timestamp + `FRAME_INTERVAL` pattern — copy it.
-- Avoid creating new objects in the inner loop. Use the `Particles` pool.
-- The scene loader pauses your loop automatically when the tab is hidden.
-- Respect `prefers-reduced-motion` : the global CSS rule already disables animations for those users, but if you do heavy work in `init` you should bail early.
-
-## Registering the scene
-
-Add the slug (the filename without `.js`) to two places :
-
-1. `AVAILABLE_SCENES` in `courant/web.py` — gates the settings dropdown
-2. Optionally `docs/superpowers/specs/2026-05-21-courant-design.md` — for the
-   design palette reference table
-
-## Style guidance
-
-- Use a tight palette : 2-4 hex codes max. The existing scenes hold to this.
-- Avoid pure white. `#f5f5f5` or warm whites (`#fff8d9`) feel cozier.
-- Subtle motion beats showy motion. Bubbles drift, rain falls at an angle,
-  stars twinkle slowly — none of this jumps or flashes.
-- Test on both bright and dim screens. Glassmorphism contrast can be fragile.
-
-## Submitting
-
-Open a PR with :
-- Your scene file
-- A short description of the vibe you were going for
-- A screenshot or short GIF if possible
-
-We welcome variety. Different cultures, different times of day, different
-weather, different planets — all good.
+Open the web UI, go to Settings, switch to your new scene. The video
+should load and start looping. If it fails, check the browser console
+for errors (CORS, 404, format).

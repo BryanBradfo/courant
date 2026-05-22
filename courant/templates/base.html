@@ -21,8 +21,11 @@
   <script src="https://unpkg.com/htmx.org@2.0.4"></script>
 </head>
 <body class="scene-dark"
-      data-scene="{{ current_scene or 'ocean-depth' }}">
-  <canvas id="scene-canvas"></canvas>
+      data-scene="{{ current_scene or 'night-train' }}">
+  <video id="scene-video"
+         autoplay loop muted playsinline
+         poster=""
+         class="scene-video"></video>
 
   <nav class="cozy-nav">
     <a href="/" class="brand">Courant</a>
@@ -38,6 +41,6 @@
     {% block content %}{% endblock %}
   </main>
 
-  <script type="module" src="/static/scene-loader.js"></script>
+  <script src="/static/scene-loader.js"></script>
 </body>
 </html>

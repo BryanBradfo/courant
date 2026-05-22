@@ -1,0 +1,42 @@
+{
+  "night-train": {
+    "name": "Night train",
+    "url": "PLACEHOLDER_URL_1",
+    "theme": "dark",
+    "author": "Pixabay user",
+    "license": "Pixabay Content License",
+    "source": "https://pixabay.com/videos/anime-lofi-cozy-night-train-311602/"
+  },
+  "lofi-study": {
+    "name": "Lo-fi study",
+    "url": "PLACEHOLDER_URL_2",
+    "theme": "dark",
+    "author": "Pixabay user",
+    "license": "Pixabay Content License",
+    "source": "https://pixabay.com/videos/ai-generated-headphones-anime-music-267772/"
+  },
+  "cozy-cabin": {
+    "name": "Cozy cabin",
+    "url": "PLACEHOLDER_URL_3",
+    "theme": "dark",
+    "author": "Pixabay user",
+    "license": "Pixabay Content License",
+    "source": "https://pixabay.com/videos/live-wallpaper-cozy-cabin-rainy-day-270983/"
+  },
+  "cat-sunrise": {
+    "name": "Cat sunrise",
+    "url": "PLACEHOLDER_URL_4",
+    "theme": "light",
+    "author": "Pixabay user",
+    "license": "Pixabay Content License",
+    "source": "https://pixabay.com/videos/lofi-chill-nature-cat-sunrise-270507/"
+  },
+  "cat-rain-night": {
+    "name": "Cat in rain",
+    "url": "PLACEHOLDER_URL_5",
+    "theme": "dark",
+    "author": "Pixabay user",
+    "license": "Pixabay Content License",
+    "source": "https://pixabay.com/videos/lofi-cat-night-window-rain-cute-246243/"
+  }
+}

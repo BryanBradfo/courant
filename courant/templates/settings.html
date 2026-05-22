@@ -20,9 +20,9 @@
         <label class="block mb-1">Ambient scene</label>
         <select name="current_scene"
                 class="cozy-select w-full px-3 py-2 rounded-lg">
-          {% for scene_name in available_scenes %}
-            <option value="{{ scene_name }}" {% if scene_name == current_scene %}selected{% endif %}>
-              {{ scene_name|replace('-', ' ')|title }}
+          {% for slug in available_scenes %}
+            <option value="{{ slug }}" {% if slug == current_scene %}selected{% endif %}>
+              {{ scenes_meta[slug].name }}
             </option>
           {% endfor %}
         </select>

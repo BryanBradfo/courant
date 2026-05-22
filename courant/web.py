@@ -7,6 +7,7 @@ in-memory DB).
 """
 from __future__ import annotations
 
+import json
 from datetime import datetime
 from pathlib import Path
 
@@ -23,7 +24,18 @@ _PACKAGE_DIR = Path(__file__).parent
 _TEMPLATES_DIR = _PACKAGE_DIR / "templates"
 _STATIC_DIR = _PACKAGE_DIR / "static"
 
-AVAILABLE_SCENES = ("ocean-depth", "rainy-window", "sunset-beach", "forest-stream", "calm-night")
+
+def _load_scenes_registry() -> dict[str, dict[str, str]]:
+    """Load the video scenes registry from the bundled JSON."""
+    from importlib import resources
+    from typing import cast
+
+    with resources.files("courant.data").joinpath("scenes.json").open("r") as f:
+        return cast(dict[str, dict[str, str]], json.load(f))
+
+
+_SCENES_REGISTRY = _load_scenes_registry()
+AVAILABLE_SCENES = tuple(_SCENES_REGISTRY.keys())
 
 
 def create_app(service: ReminderService) -> FastAPI:
@@ -36,8 +48,8 @@ def create_app(service: ReminderService) -> FastAPI:
     )
 
     def _base_context() -> dict[str, str]:
-        raw = get_setting(service._conn, "current_scene", default="ocean-depth")
-        current_scene: str = raw or "ocean-depth"
+        raw = get_setting(service._conn, "current_scene", default="night-train")
+        current_scene: str = raw or "night-train"
         return {"current_scene": current_scene}
 
     templates = Jinja2Templates(directory=str(_TEMPLATES_DIR))
@@ -46,6 +58,10 @@ def create_app(service: ReminderService) -> FastAPI:
     @app.get("/api/health")
     async def health() -> dict[str, str]:
         return {"status": "ok"}
+
+    @app.get("/api/scenes")
+    async def api_scenes() -> dict[str, dict[str, str]]:
+        return _SCENES_REGISTRY
 
     @app.get("/", response_class=HTMLResponse)
     async def dashboard(request: Request) -> HTMLResponse:
@@ -189,7 +205,7 @@ def create_app(service: ReminderService) -> FastAPI:
     @app.get("/settings", response_class=HTMLResponse)
     async def settings_page(request: Request) -> HTMLResponse:
         snooze = get_setting(service._conn, "snooze_minutes", default="10")
-        current_scene = get_setting(service._conn, "current_scene", default="ocean-depth")
+        current_scene = get_setting(service._conn, "current_scene", default="night-train")
         return templates.TemplateResponse(
             request, "settings.html",
             {
@@ -197,6 +213,7 @@ def create_app(service: ReminderService) -> FastAPI:
                 "snooze_minutes": snooze,
                 "current_scene": current_scene,
                 "available_scenes": AVAILABLE_SCENES,
+                "scenes_meta": _SCENES_REGISTRY,
             },
         )
 
