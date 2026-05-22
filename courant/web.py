@@ -162,4 +162,9 @@ def create_app(service: ReminderService) -> FastAPI:
         service.update_reminder(r)
         return RedirectResponse(url="/reminders", status_code=303)
 
+    @app.post("/reminders/{reminder_id}/delete")
+    async def delete_reminder_post(reminder_id: int) -> RedirectResponse:
+        service.delete_reminder(reminder_id)
+        return RedirectResponse(url="/reminders", status_code=303)
+
     return app

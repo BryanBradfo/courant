@@ -226,3 +226,17 @@ async def test_edit_missing_reminder_404(memory_db: sqlite3.Connection):
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         resp = await client.get("/reminders/9999/edit")
     assert resp.status_code == 404
+
+
+# --- Task 8: Delete reminder ---
+
+async def test_delete_reminder(memory_db: sqlite3.Connection):
+    migrate(memory_db)
+    service = ReminderService(memory_db)
+    rid = service.create_reminder(_make_reminder("Water"))
+    app = create_app(service)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        resp = await client.post(f"/reminders/{rid}/delete", follow_redirects=False)
+    assert resp.status_code in (302, 303)
+    assert service.get_reminder(rid) is None
