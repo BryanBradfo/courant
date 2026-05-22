@@ -240,3 +240,25 @@ async def test_delete_reminder(memory_db: sqlite3.Connection):
         resp = await client.post(f"/reminders/{rid}/delete", follow_redirects=False)
     assert resp.status_code in (302, 303)
     assert service.get_reminder(rid) is None
+
+
+# --- Task 9: Toggle enable/disable ---
+
+async def test_toggle_disables_then_enables(memory_db: sqlite3.Connection):
+    migrate(memory_db)
+    service = ReminderService(memory_db)
+    rid = service.create_reminder(_make_reminder("Water"))
+    app = create_app(service)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        resp = await client.post(f"/reminders/{rid}/toggle")
+        assert resp.status_code == 200
+        # Response is the new row HTML
+        assert "disabled" in resp.text.lower()
+
+        resp = await client.post(f"/reminders/{rid}/toggle")
+        assert "disabled" not in resp.text.lower() or "enabled" in resp.text.lower()
+
+    # Final state: enabled again
+    r = service.get_reminder(rid)
+    assert r is not None and r.enabled is True

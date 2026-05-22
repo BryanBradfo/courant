@@ -167,4 +167,15 @@ def create_app(service: ReminderService) -> FastAPI:
         service.delete_reminder(reminder_id)
         return RedirectResponse(url="/reminders", status_code=303)
 
+    @app.post("/reminders/{reminder_id}/toggle", response_class=HTMLResponse)
+    async def toggle_reminder(request: Request, reminder_id: int) -> HTMLResponse:
+        r = service.get_reminder(reminder_id)
+        if r is None:
+            raise HTTPException(status_code=404, detail="Reminder not found")
+        r.enabled = not r.enabled
+        service.update_reminder(r)
+        return templates.TemplateResponse(
+            request, "partials/reminder_row.html", {"r": r},
+        )
+
     return app
