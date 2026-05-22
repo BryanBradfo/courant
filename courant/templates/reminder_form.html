@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'New' if is_new else 'Edit' }} reminder — Courant{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-bold mb-6">{{ 'New' if is_new else 'Edit' }} reminder</h1>
+
+<form method="post"
+      action="{{ '/reminders' if is_new else '/reminders/' ~ reminder.id }}"
+      class="bg-white rounded-lg border border-slate-200 p-6 space-y-4 max-w-2xl">
+
+  <div>
+    <label class="block text-sm font-medium mb-1">Name</label>
+    <input name="name" required value="{{ reminder.name if reminder else '' }}"
+           class="w-full border border-slate-300 rounded px-3 py-2">
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium mb-1">Message</label>
+    <input name="message" required value="{{ reminder.message if reminder else '' }}"
+           class="w-full border border-slate-300 rounded px-3 py-2">
+  </div>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <label class="block text-sm font-medium mb-1">Icon (emoji)</label>
+      <input name="icon" value="{{ reminder.icon if reminder else '' }}" maxlength="4"
+             class="w-full border border-slate-300 rounded px-3 py-2">
+    </div>
+    <div>
+      <label class="block text-sm font-medium mb-1">Every X minutes</label>
+      <input name="interval_minutes" type="number" min="1" required
+             value="{{ reminder.interval_minutes if reminder else 45 }}"
+             class="w-full border border-slate-300 rounded px-3 py-2">
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <label class="block text-sm font-medium mb-1">Active from</label>
+      <input name="active_hours_start" type="time" required
+             value="{{ '%02d:%02d'|format(reminder.active_hours[0].hour, reminder.active_hours[0].minute) if reminder else '09:00' }}"
+             class="w-full border border-slate-300 rounded px-3 py-2">
+    </div>
+    <div>
+      <label class="block text-sm font-medium mb-1">Active until</label>
+      <input name="active_hours_end" type="time" required
+             value="{{ '%02d:%02d'|format(reminder.active_hours[1].hour, reminder.active_hours[1].minute) if reminder else '18:00' }}"
+             class="w-full border border-slate-300 rounded px-3 py-2">
+    </div>
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium mb-1">Active days (comma-separated)</label>
+    <input name="active_days"
+           value="{{ active_days_csv }}"
+           class="w-full border border-slate-300 rounded px-3 py-2">
+    <p class="text-xs text-slate-500 mt-1">Use abbreviations: mon, tue, wed, thu, fri, sat, sun</p>
+  </div>
+
+  <div class="border-t border-slate-200 pt-4">
+    <label class="flex items-center gap-2">
+      <input type="checkbox" name="tracked" value="on"
+             {% if reminder and reminder.tracked %}checked{% endif %}>
+      <span class="text-sm font-medium">Track progress toward a daily goal</span>
+    </label>
+  </div>
+
+  <div class="grid grid-cols-3 gap-4">
+    <div>
+      <label class="block text-sm font-medium mb-1">Unit label</label>
+      <input name="unit_label" placeholder="glass, cup..."
+             value="{{ reminder.unit_label if reminder and reminder.unit_label else '' }}"
+             class="w-full border border-slate-300 rounded px-3 py-2">
+    </div>
+    <div>
+      <label class="block text-sm font-medium mb-1">Unit amount</label>
+      <input name="unit_amount" type="number" min="1" placeholder="250"
+             value="{{ reminder.unit_amount if reminder and reminder.unit_amount else '' }}"
+             class="w-full border border-slate-300 rounded px-3 py-2">
+    </div>
+    <div>
+      <label class="block text-sm font-medium mb-1">Daily goal</label>
+      <input name="daily_goal" type="number" min="1" placeholder="8"
+             value="{{ reminder.daily_goal if reminder and reminder.daily_goal else '' }}"
+             class="w-full border border-slate-300 rounded px-3 py-2">
+    </div>
+  </div>
+
+  <div class="flex gap-3 pt-4 border-t border-slate-200">
+    <button type="submit"
+            class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+      {{ 'Create' if is_new else 'Save' }}
+    </button>
+    <a href="/reminders" class="px-4 py-2 bg-slate-200 text-slate-700 rounded hover:bg-slate-300">
+      Cancel
+    </a>
+  </div>
+</form>
+{% endblock %}

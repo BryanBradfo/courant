@@ -112,6 +112,42 @@ def test_status_with_db_shows_reminder_count(
     assert "water" in out.lower() or "reminder" in out.lower()
 
 
+def test_start_serves_health_endpoint(
+    tmp_path: Path,
+):
+    """Start the daemon, hit /api/health, then shut it down."""
+    import os
+    import urllib.error
+    import urllib.request
+
+    env = {
+        "XDG_CONFIG_HOME": str(tmp_path / "config"),
+        "XDG_DATA_HOME": str(tmp_path / "data"),
+        "XDG_CACHE_HOME": str(tmp_path / "cache"),
+        "PATH": os.environ.get("PATH", ""),
+    }
+    proc = subprocess.Popen(
+        [sys.executable, "-m", "courant.cli", "start"],
+        env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+    )
+    try:
+        # Poll /api/health for up to 5s
+        ready = False
+        for _ in range(50):
+            try:
+                url = "http://127.0.0.1:8765/api/health"
+                with urllib.request.urlopen(url, timeout=0.5) as resp:
+                    if resp.status == 200:
+                        ready = True
+                        break
+            except (urllib.error.URLError, ConnectionError):
+                time.sleep(0.1)
+        assert ready, "Web server did not respond within 5s"
+    finally:
+        proc.send_signal(signal.SIGTERM)
+        proc.wait(timeout=5)
+
+
 def test_stop_when_no_systemd_prints_instructions(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

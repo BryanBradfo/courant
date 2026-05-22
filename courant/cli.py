@@ -9,10 +9,8 @@ import argparse
 import logging
 import os
 import shutil
-import signal
 import subprocess
 import sys
-import time as time_module
 
 from apscheduler.schedulers.background import BackgroundScheduler  # type: ignore[import-untyped]
 
@@ -57,6 +55,7 @@ def _run_daemon() -> int:
     seeded = service.seed_defaults_if_empty()
     if seeded > 0:
         logger.info("Seeded %d default reminders on first launch", seeded)
+
     notifier = _build_notifier()
     apsched = BackgroundScheduler()
     rs = ReminderScheduler(scheduler=apsched, service=service, notifier=notifier)
@@ -65,19 +64,10 @@ def _run_daemon() -> int:
 
     logger.info("Courant daemon started (PID %d)", os.getpid())
 
-    stop_requested = False
-
-    def _on_signal(signum: int, _frame: object) -> None:
-        nonlocal stop_requested
-        logger.info("Received signal %d, shutting down", signum)
-        stop_requested = True
-
-    signal.signal(signal.SIGTERM, _on_signal)
-    signal.signal(signal.SIGINT, _on_signal)
-
     try:
-        while not stop_requested:
-            time_module.sleep(0.5)
+        # uvicorn handles SIGTERM/SIGINT internally and returns cleanly
+        from courant.web_runner import run_server
+        run_server(service)
     finally:
         rs.shutdown()
         conn.close()
