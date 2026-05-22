@@ -200,10 +200,14 @@ def create_app(service: ReminderService) -> FastAPI:
     @app.post("/settings")
     async def settings_post(
         snooze_minutes: int = Form(...),
+        current_scene: str = Form(...),
     ) -> RedirectResponse:
         if snooze_minutes < 1:
             raise HTTPException(status_code=400, detail="snooze_minutes must be >= 1")
+        if current_scene not in AVAILABLE_SCENES:
+            raise HTTPException(status_code=400, detail=f"Unknown scene: {current_scene}")
         set_setting(service._conn, "snooze_minutes", str(snooze_minutes))
+        set_setting(service._conn, "current_scene", current_scene)
         return RedirectResponse(url="/settings", status_code=303)
 
     @app.post("/reminders/{reminder_id}/toggle", response_class=HTMLResponse)
