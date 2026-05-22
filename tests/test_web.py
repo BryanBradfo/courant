@@ -262,3 +262,21 @@ async def test_toggle_disables_then_enables(memory_db: sqlite3.Connection):
     # Final state: enabled again
     r = service.get_reminder(rid)
     assert r is not None and r.enabled is True
+
+
+# --- Task 10: /stats page ---
+
+async def test_stats_page_shows_per_reminder_today(memory_db: sqlite3.Connection):
+    migrate(memory_db)
+    service = ReminderService(memory_db)
+    rid = service.create_reminder(_make_reminder("Water"))
+    service.handle_action(rid, "ack")
+    service.handle_action(rid, "ack")
+    service.handle_action(rid, "ack")
+    app = create_app(service)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        resp = await client.get("/stats")
+    assert resp.status_code == 200
+    assert "Water" in resp.text
+    assert "3" in resp.text  # today's count

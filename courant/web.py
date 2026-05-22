@@ -167,6 +167,14 @@ def create_app(service: ReminderService) -> FastAPI:
         service.delete_reminder(reminder_id)
         return RedirectResponse(url="/reminders", status_code=303)
 
+    @app.get("/stats", response_class=HTMLResponse)
+    async def stats_page(request: Request) -> HTMLResponse:
+        reminders = service.list_reminders()
+        progresses = {r.id: service.daily_progress(r.id) for r in reminders if r.id is not None}
+        return templates.TemplateResponse(
+            request, "stats.html", {"reminders": reminders, "progresses": progresses},
+        )
+
     @app.post("/reminders/{reminder_id}/toggle", response_class=HTMLResponse)
     async def toggle_reminder(request: Request, reminder_id: int) -> HTMLResponse:
         r = service.get_reminder(reminder_id)
