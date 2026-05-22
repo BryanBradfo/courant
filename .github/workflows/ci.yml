@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Principle of least privilege : the workflow only needs to read the repo.
+# No write access to issues, PRs, packages, etc.
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      # Don't cancel the other Python versions if one fails — we want full
+      # signal on every push to know which versions pass.
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          # Caches the pip download dir keyed on pyproject.toml — saves ~30s on
+          # subsequent runs since dependencies don't change every push.
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Lint with ruff
+        run: ruff check courant tests
+
+      - name: Type-check with mypy
+        run: mypy courant
+
+      - name: Run tests
+        # The DesktopNotifier smoke test is gated on DBUS_SESSION_BUS_ADDRESS,
+        # which is unset in GitHub Actions runners — that test will skip.
+        # The FakeNotifier tests and all other unit/integration tests run.
+        run: pytest -v

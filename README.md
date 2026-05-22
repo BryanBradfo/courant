@@ -1,5 +1,9 @@
 # Courant
 
+[![CI](https://github.com/BryanBradfo/courant/actions/workflows/ci.yml/badge.svg)](https://github.com/BryanBradfo/courant/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-blue)](pyproject.toml)
+
 > A cozy reminder for developers — drink water, rest your eyes, stretch.
 
 Linux desktop app that fires customizable system notifications and tracks your daily progress, with a cozy lo-fi web interface (coming in Phase 2). The product name "Courant" means *current* / *flow* in French — the gentle stream that nudges you toward healthier breaks.
