@@ -1,6 +1,7 @@
 """Tests for the courant CLI."""
 from __future__ import annotations
 
+import os
 import signal
 import sqlite3
 import subprocess
@@ -183,3 +184,74 @@ def test_install_scenes_when_all_present(
     assert exit_code == 0
     out = capsys.readouterr().out
     assert "already installed" in out.lower()
+
+
+def test_install_writes_systemd_unit(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str],
+):
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+    # Mock systemctl to be present so the install path proceeds
+    monkeypatch.setenv("PATH", "/usr/bin:" + os.environ.get("PATH", ""))
+
+    # The install command should not actually enable / start the unit in tests —
+    # we monkeypatch subprocess.run to capture invocations instead.
+    calls: list[list[str]] = []
+    import subprocess as sub_mod
+
+    def fake_run(cmd, *args, **kwargs):
+        calls.append(cmd)
+        class R:
+            returncode = 0
+            stdout = ""
+            stderr = ""
+        return R()
+
+    monkeypatch.setattr(sub_mod, "run", fake_run)
+
+    exit_code = main(["install"])
+    assert exit_code == 0
+
+    # Check the unit file was written
+    unit_path = tmp_path / "config" / "systemd" / "user" / "courant.service"
+    assert unit_path.exists()
+    content = unit_path.read_text()
+    assert "Courant" in content
+    assert "ExecStart=" in content
+    assert "@@COURANT_BIN@@" not in content  # substitution happened
+
+    # Check systemctl was called
+    systemctl_calls = [c for c in calls if c[0].endswith("systemctl")]
+    assert any("daemon-reload" in " ".join(c) for c in systemctl_calls)
+    assert any(
+        "enable" in " ".join(c) and "courant.service" in " ".join(c)
+        for c in systemctl_calls
+    )
+
+
+def test_uninstall_removes_systemd_unit(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str],
+):
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+    monkeypatch.setenv("PATH", "/usr/bin:" + os.environ.get("PATH", ""))
+
+    # Pre-create a fake unit file
+    unit_path = tmp_path / "config" / "systemd" / "user" / "courant.service"
+    unit_path.parent.mkdir(parents=True)
+    unit_path.write_text("fake unit")
+
+    calls: list[list[str]] = []
+    import subprocess as sub_mod
+
+    def fake_run(cmd, *args, **kwargs):
+        calls.append(cmd)
+        class R:
+            returncode = 0
+            stdout = ""
+            stderr = ""
+        return R()
+
+    monkeypatch.setattr(sub_mod, "run", fake_run)
+
+    exit_code = main(["uninstall"])
+    assert exit_code == 0
+    assert not unit_path.exists()
