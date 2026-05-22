@@ -36,6 +36,15 @@ def videos_dir() -> Path:
     return data_dir() / "videos"
 
 
+def audio_dir() -> Path:
+    return data_dir() / "audio"
+
+
+def systemd_user_dir() -> Path:
+    return _xdg("XDG_CONFIG_HOME", ".config") / "systemd" / "user"
+
+
 def ensure_dirs() -> None:
-    for d in (config_dir(), data_dir(), cache_dir(), cache_dir() / "logs", videos_dir()):
+    dirs = (config_dir(), data_dir(), cache_dir(), cache_dir() / "logs", videos_dir(), audio_dir())
+    for d in dirs:
         d.mkdir(parents=True, exist_ok=True)

@@ -1,0 +1,15 @@
+[Unit]
+Description=Courant — a cozy reminder for developers
+Documentation=https://github.com/BryanBradfo/courant
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=@@COURANT_BIN@@ start
+Restart=on-failure
+RestartSec=5s
+Environment=COURANT_MANAGED_BY_SYSTEMD=1
+
+[Install]
+WantedBy=default.target

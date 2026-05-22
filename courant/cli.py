@@ -16,7 +16,7 @@ from apscheduler.schedulers.background import BackgroundScheduler  # type: ignor
 
 from courant import __version__
 from courant.notifier import DesktopNotifier, FakeNotifier, Notifier
-from courant.paths import db_path, ensure_dirs, log_path
+from courant.paths import db_path, ensure_dirs, log_path, systemd_user_dir
 from courant.repository import backup_if_stale, connect, migrate
 from courant.scheduler import ReminderScheduler
 from courant.service import ReminderService
@@ -124,6 +124,64 @@ def _run_status() -> int:
     return 0
 
 
+def _render_unit_template() -> str:
+    """Read the bundled template and substitute @@COURANT_BIN@@."""
+    from importlib import resources
+    template = resources.files("courant.data").joinpath("courant.service.in").read_text()
+    courant_bin = shutil.which("courant") or "/usr/local/bin/courant"
+    return template.replace("@@COURANT_BIN@@", courant_bin)
+
+
+def _run_install() -> int:
+    if shutil.which("systemctl") is None:
+        print(
+            "systemctl not found. systemd integration is only available on systemd-managed Linux."
+        )
+        return 1
+
+    unit_path = systemd_user_dir() / "courant.service"
+    unit_path.parent.mkdir(parents=True, exist_ok=True)
+    unit_path.write_text(_render_unit_template())
+    print(f"Wrote {unit_path}")
+
+    for cmd in (
+        ["systemctl", "--user", "daemon-reload"],
+        ["systemctl", "--user", "enable", "courant.service"],
+        ["systemctl", "--user", "start", "courant.service"],
+    ):
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        if result.returncode != 0:
+            print(f"Command failed : {' '.join(cmd)}")
+            print(result.stderr)
+            return 1
+        print(f"✓ {' '.join(cmd)}")
+
+    print("\nCourant is now running as a systemd user service.")
+    print("Web UI : http://localhost:8765")
+    print("Status : courant status   or   systemctl --user status courant.service")
+    return 0
+
+
+def _run_uninstall() -> int:
+    unit_path = systemd_user_dir() / "courant.service"
+    if not unit_path.exists():
+        print("Courant systemd service is not installed.")
+        return 0
+
+    if shutil.which("systemctl"):
+        for cmd in (
+            ["systemctl", "--user", "stop", "courant.service"],
+            ["systemctl", "--user", "disable", "courant.service"],
+            ["systemctl", "--user", "daemon-reload"],
+        ):
+            subprocess.run(cmd, capture_output=True, text=True)
+
+    unit_path.unlink()
+    print(f"Removed {unit_path}")
+    print("Courant systemd service uninstalled. Your data (DB, videos) is unchanged.")
+    return 0
+
+
 def _run_stop() -> int:
     if shutil.which("systemctl") is None:
         print(
@@ -142,6 +200,23 @@ def _run_stop() -> int:
     return 0
 
 
+def _run_install_audio() -> int:
+    from courant.audio_downloader import install_all, missing_tracks
+    missing = missing_tracks()
+    if not missing:
+        print("All audio tracks already installed.")
+        return 0
+    print(f"Installing {len(missing)} missing audio tracks")
+    succeeded, total = install_all(only_missing=True)
+    print()
+    if succeeded == total:
+        print(f"✓ Installed {succeeded} audio tracks successfully.")
+        return 0
+    else:
+        print(f"⚠ {succeeded}/{total} audio tracks installed (some failed — check logs).")
+        return 1
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="courant",
@@ -157,6 +232,9 @@ def _build_parser() -> argparse.ArgumentParser:
         "install-scenes",
         help="Download the 6 default ambient scene videos (~10 MB total)",
     )
+    subparsers.add_parser("install", help="Create + enable the systemd user service")
+    subparsers.add_parser("uninstall", help="Disable + remove the systemd user service")
+    subparsers.add_parser("install-audio", help="Download ambient audio tracks")
 
     return parser
 
@@ -184,6 +262,15 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "install-scenes":
         return _run_install_scenes()
+
+    if args.command == "install":
+        return _run_install()
+
+    if args.command == "uninstall":
+        return _run_uninstall()
+
+    if args.command == "install-audio":
+        return _run_install_audio()
 
     print(f"command '{args.command}' not yet implemented", file=sys.stderr)
     return 1

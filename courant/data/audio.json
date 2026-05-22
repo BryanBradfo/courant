@@ -1,0 +1,34 @@
+{
+  "rain": {
+    "name": "Rain",
+    "url": "/audio/rain.mp3",
+    "download_url": "https://github.com/BryanBradfo/courant/releases/download/audio-v1/rain.mp3",
+    "author": "Pixabay contributor",
+    "license": "Pixabay Content License",
+    "source": "https://pixabay.com/sound-effects/search/rain/"
+  },
+  "ocean": {
+    "name": "Ocean waves",
+    "url": "/audio/ocean.mp3",
+    "download_url": "https://github.com/BryanBradfo/courant/releases/download/audio-v1/ocean.mp3",
+    "author": "Pixabay contributor",
+    "license": "Pixabay Content License",
+    "source": "https://pixabay.com/sound-effects/search/ocean/"
+  },
+  "cafe": {
+    "name": "Café ambiance",
+    "url": "/audio/cafe.mp3",
+    "download_url": "https://github.com/BryanBradfo/courant/releases/download/audio-v1/cafe.mp3",
+    "author": "Pixabay contributor",
+    "license": "Pixabay Content License",
+    "source": "https://pixabay.com/sound-effects/search/cafe/"
+  },
+  "fireplace": {
+    "name": "Fireplace",
+    "url": "/audio/fireplace.mp3",
+    "download_url": "https://github.com/BryanBradfo/courant/releases/download/audio-v1/fireplace.mp3",
+    "author": "Pixabay contributor",
+    "license": "Pixabay Content License",
+    "source": "https://pixabay.com/sound-effects/search/fireplace/"
+  }
+}

@@ -27,6 +27,20 @@
          poster=""
          class="scene-video"></video>
 
+  <div id="audio-player" class="audio-player">
+    <audio id="audio-element" loop preload="none"></audio>
+    <button id="audio-toggle" class="audio-toggle" aria-label="Play/pause ambient audio">
+      ♪
+    </button>
+    <span id="audio-track-name" class="audio-track-name">—</span>
+    <select id="audio-select" class="cozy-select audio-select" aria-label="Select audio track">
+      <option value="">Silence</option>
+      <!-- options populated by JS from /api/audio -->
+    </select>
+    <input id="audio-volume" type="range" min="0" max="100" value="50"
+           class="audio-volume" aria-label="Volume">
+  </div>
+
   <nav class="cozy-nav">
     <a href="/" class="brand">Courant</a>
     <div class="flex gap-6 text-sm">
@@ -42,5 +56,6 @@
   </main>
 
   <script src="/static/scene-loader.js"></script>
+  <script src="/static/audio-player.js"></script>
 </body>
 </html>

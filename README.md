@@ -13,15 +13,27 @@ Linux desktop app that fires customizable system notifications, tracks your dail
 - ✅ Phase 1 — Core CLI + desktop notifications working end-to-end
 - ✅ Phase 2 — Functional web UI (FastAPI + HTMX)
 - ✅ Phase 3 — Cozy aesthetic with ambient scenes (ocean, rain, sunset, forest, night)
-- ⏳ Phase 4 — Polish, systemd integration, ambient audio, PyPI release
+- ✅ Phase 4 — systemd integration + PyPI publish + ambient audio
 
-## Quick start (dev)
+## Quick start
+
+```bash
+pipx install courant
+courant install-scenes        # ~10 MB of ambient videos
+courant install-audio         # ~2 MB of ambient sounds (optional)
+courant install               # creates a systemd user service (auto-starts at login)
+```
+
+The web UI is at <http://localhost:8765>.
+
+## Manual / dev install
 
 ```bash
 git clone https://github.com/BryanBradfo/courant
 cd courant
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
+courant install-scenes
 
 courant start    # foreground daemon
 courant status   # (in another terminal) see configured reminders
