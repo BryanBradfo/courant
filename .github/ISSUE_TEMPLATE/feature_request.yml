@@ -1,0 +1,37 @@
+name: Feature request
+description: Suggest a new feature or improvement
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before opening this : if it's about a Slack/Discord/calendar/mobile integration, please check `CONTRIBUTING.md` first — those are out of scope for v1 and we'd rather not derail the project.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What's the use case ?
+      description: |
+        Describe the situation where you wished Courant did something it doesn't. We're more interested in the underlying need than a specific solution.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution (optional)
+      description: If you have an idea of how this could work, sketch it here.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered (optional)
+      description: Any workaround you currently use, or other tools that solve this differently.
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope sanity check
+      description: From CONTRIBUTING.md, these are out of scope. Please confirm yours isn't one of them.
+      options:
+        - label: This isn't a Slack / Discord / Telegram / email notifier integration
+        - label: This isn't a mobile companion app
+        - label: This isn't a calendar sync feature
+        - label: This isn't a time-tracking feature

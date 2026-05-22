@@ -1,0 +1,73 @@
+name: Bug report
+description: Report something that isn't working as expected
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report. Please fill in the details below.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened ?
+      description: Describe the bug. What did you do, what did you expect, what actually occurred ?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: |
+        Minimal sequence to reproduce the issue. Include exact commands if relevant.
+      placeholder: |
+        1. Run `courant start`
+        2. Open http://localhost:8765
+        3. Click on ...
+        4. See ...
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: |
+        From `~/.cache/courant/logs/courant.log` or the daemon's stderr. Trim to ~50 lines around the issue.
+      render: shell
+  - type: input
+    id: courant-version
+    attributes:
+      label: Courant version
+      description: Output of `courant version`
+      placeholder: courant 0.1.0
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Linux distribution
+      placeholder: Ubuntu 24.04, Arch, Fedora 41, etc.
+    validations:
+      required: true
+  - type: input
+    id: desktop
+    attributes:
+      label: Desktop environment
+      placeholder: GNOME 47, KDE Plasma 6, XFCE 4.20, Hyprland, sway, etc.
+    validations:
+      required: true
+  - type: input
+    id: python-version
+    attributes:
+      label: Python version
+      description: Output of `python --version`
+      placeholder: Python 3.13.1
+    validations:
+      required: true
+  - type: checkboxes
+    id: searched
+    attributes:
+      label: Sanity check
+      options:
+        - label: I searched existing issues and didn't find a duplicate
+          required: true
