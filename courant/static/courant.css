@@ -171,3 +171,24 @@ body {
   background: rgba(255, 255, 255, 0.12);
 }
 .panel label { color: var(--text-secondary); font-size: 0.875rem; }
+
+/* Cozy <select> — `color-scheme: dark` makes the browser render the
+   dropdown options in dark mode (otherwise they default to white-on-gray on Linux). */
+.cozy-select {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  color-scheme: dark;
+  cursor: pointer;
+  transition: border-color 150ms, background 150ms;
+}
+.cozy-select:focus {
+  outline: none;
+  border-color: var(--accent-blue);
+  background: rgba(255, 255, 255, 0.12);
+}
+.cozy-select option {
+  background: #1a1a2e;
+  color: var(--text-primary);
+}

@@ -19,8 +19,7 @@
       <div>
         <label class="block mb-1">Ambient scene</label>
         <select name="current_scene"
-                class="w-full px-3 py-2 rounded-lg"
-                style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: var(--text-primary)">
+                class="cozy-select w-full px-3 py-2 rounded-lg">
           {% for scene_name in available_scenes %}
             <option value="{{ scene_name }}" {% if scene_name == current_scene %}selected{% endif %}>
               {{ scene_name|replace('-', ' ')|title }}
