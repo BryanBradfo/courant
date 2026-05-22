@@ -77,3 +77,27 @@ async def test_dashboard_shows_progress_for_tracked(memory_db: sqlite3.Connectio
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         resp = await client.get("/")
     assert "2 / 8" in resp.text or "2/8" in resp.text  # progress label
+
+
+async def test_post_event_ack_increments_progress(memory_db: sqlite3.Connection):
+    migrate(memory_db)
+    service = ReminderService(memory_db)
+    rid = service.create_reminder(_make_reminder("Water"))
+    app = create_app(service)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        resp = await client.post(f"/api/events", data={"reminder_id": rid, "kind": "ack"})
+    assert resp.status_code == 200
+    # The response is the updated card HTML (HTMX swap target)
+    assert "1 / 8" in resp.text or "1/8" in resp.text
+
+
+async def test_post_event_unknown_kind_400(memory_db: sqlite3.Connection):
+    migrate(memory_db)
+    service = ReminderService(memory_db)
+    rid = service.create_reminder(_make_reminder("Water"))
+    app = create_app(service)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        resp = await client.post(f"/api/events", data={"reminder_id": rid, "kind": "bogus"})
+    assert resp.status_code == 400

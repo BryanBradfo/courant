@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -45,6 +45,25 @@ def create_app(service: ReminderService) -> FastAPI:
             request,
             "dashboard.html",
             {"reminders": reminders, "progresses": progresses},
+        )
+
+    @app.post("/api/events", response_class=HTMLResponse)
+    async def post_event(
+        request: Request,
+        reminder_id: int = Form(...),
+        kind: str = Form(...),
+    ) -> HTMLResponse:
+        if kind not in ("ack", "snooze", "dismissed"):
+            raise HTTPException(status_code=400, detail=f"Unknown action: {kind}")
+        service.handle_action(reminder_id, kind)
+        r = service.get_reminder(reminder_id)
+        if r is None:
+            raise HTTPException(status_code=404, detail="Reminder not found")
+        progress = service.daily_progress(reminder_id)
+        return templates.TemplateResponse(
+            request,
+            "partials/reminder_card.html",
+            {"r": r, "progress": progress},
         )
 
     return app
