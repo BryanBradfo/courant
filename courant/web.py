@@ -40,10 +40,11 @@ def create_app(service: ReminderService) -> FastAPI:
     @app.get("/", response_class=HTMLResponse)
     async def dashboard(request: Request) -> HTMLResponse:
         reminders = service.list_reminders()
+        progresses = {r.id: service.daily_progress(r.id) for r in reminders if r.id is not None}
         return templates.TemplateResponse(
             request,
             "dashboard.html",
-            {"reminders": reminders},
+            {"reminders": reminders, "progresses": progresses},
         )
 
     return app

@@ -31,3 +31,49 @@ async def test_dashboard_renders(app_with_empty_db):
     assert resp.status_code == 200
     assert "Courant" in resp.text
     assert "text/html" in resp.headers["content-type"]
+
+
+from datetime import datetime, time
+from courant.models import Reminder, Weekday
+
+
+def _make_reminder(name: str, tracked: bool = True) -> Reminder:
+    return Reminder(
+        id=None, name=name, message=f"Time to {name.lower()}",
+        icon="💧" if "water" in name.lower() else None,
+        interval_minutes=45,
+        active_hours=(time(0, 0), time(23, 59)),
+        active_days=frozenset(Weekday),
+        enabled=True, tracked=tracked,
+        unit_label="glass" if tracked else None,
+        unit_amount=250 if tracked else None,
+        daily_goal=8 if tracked else None,
+        created_at=datetime(2026, 5, 22, 10, 0), paused_until=None,
+    )
+
+
+async def test_dashboard_shows_reminder_names(memory_db: sqlite3.Connection):
+    migrate(memory_db)
+    service = ReminderService(memory_db)
+    service.create_reminder(_make_reminder("Water"))
+    service.create_reminder(_make_reminder("Stretch", tracked=False))
+    app = create_app(service)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        resp = await client.get("/")
+    assert resp.status_code == 200
+    assert "Water" in resp.text
+    assert "Stretch" in resp.text
+
+
+async def test_dashboard_shows_progress_for_tracked(memory_db: sqlite3.Connection):
+    migrate(memory_db)
+    service = ReminderService(memory_db)
+    rid = service.create_reminder(_make_reminder("Water"))
+    service.handle_action(rid, "ack")
+    service.handle_action(rid, "ack")
+    app = create_app(service)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        resp = await client.get("/")
+    assert "2 / 8" in resp.text or "2/8" in resp.text  # progress label
