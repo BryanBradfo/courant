@@ -1,20 +1,20 @@
 [
   {
-    "name": "Boire de l'eau",
-    "message": "Hydrate-toi 💧",
+    "name": "Drink water",
+    "message": "Stay hydrated 💧",
     "icon": "💧",
     "interval_minutes": 45,
     "active_hours_start": "09:00",
     "active_hours_end": "18:00",
     "active_days": "mon,tue,wed,thu,fri",
     "tracked": true,
-    "unit_label": "verre",
+    "unit_label": "glass",
     "unit_amount": 250,
     "daily_goal": 8
   },
   {
-    "name": "Pause yeux (20-20-20)",
-    "message": "Regarde quelque chose à 6 mètres pendant 20 secondes 👀",
+    "name": "Eye break (20-20-20)",
+    "message": "Look at something 20 feet (6m) away for 20 seconds 👀",
     "icon": "👀",
     "interval_minutes": 20,
     "active_hours_start": "09:00",
@@ -23,8 +23,8 @@
     "tracked": false
   },
   {
-    "name": "Étirements",
-    "message": "Lève-toi, étire-toi 🦵",
+    "name": "Stretch",
+    "message": "Stand up and stretch 🦵",
     "icon": "🦵",
     "interval_minutes": 90,
     "active_hours_start": "09:00",

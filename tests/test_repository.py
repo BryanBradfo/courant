@@ -62,18 +62,18 @@ def test_migrate_creates_event_index(memory_db: sqlite3.Connection):
     assert "idx_events_reminder_time" in indexes
 
 
-def _sample_reminder(name: str = "Eau") -> Reminder:
+def _sample_reminder(name: str = "Water") -> Reminder:
     return Reminder(
         id=None,
         name=name,
-        message="Hydrate-toi",
+        message="Stay hydrated",
         icon="💧",
         interval_minutes=45,
         active_hours=(time(9, 0), time(18, 0)),
         active_days=frozenset({Weekday.MON, Weekday.TUE}),
         enabled=True,
         tracked=True,
-        unit_label="verre",
+        unit_label="glass",
         unit_amount=250,
         daily_goal=8,
         created_at=datetime(2026, 5, 21, 10, 0),
@@ -88,7 +88,7 @@ def test_insert_and_get_reminder(memory_db: sqlite3.Connection):
     assert new_id > 0
     fetched = get_reminder(memory_db, new_id)
     assert fetched is not None
-    assert fetched.name == "Eau"
+    assert fetched.name == "Water"
     assert fetched.interval_minutes == 45
     assert fetched.icon == "💧"
     assert fetched.active_days == frozenset({Weekday.MON, Weekday.TUE})

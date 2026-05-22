@@ -23,7 +23,7 @@ def stopped_scheduler() -> BackgroundScheduler:
         sched.shutdown(wait=False)
 
 
-def _new_reminder(name: str = "Eau", interval: int = 30) -> Reminder:
+def _new_reminder(name: str = "Water", interval: int = 30) -> Reminder:
     return Reminder(
         id=None, name=name, message="m", icon=None,
         interval_minutes=interval,

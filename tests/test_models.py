@@ -9,8 +9,8 @@ from courant.models import Event, Reminder, Weekday, parse_active_days
 def test_reminder_construction_minimal():
     r = Reminder(
         id=None,
-        name="Eau",
-        message="Bois !",
+        name="Water",
+        message="Drink !",
         icon=None,
         interval_minutes=45,
         active_hours=(time(9, 0), time(18, 0)),
@@ -23,7 +23,7 @@ def test_reminder_construction_minimal():
         created_at=datetime(2026, 5, 21, 14, 0),
         paused_until=None,
     )
-    assert r.name == "Eau"
+    assert r.name == "Water"
     assert r.interval_minutes == 45
     assert r.enabled is True
 

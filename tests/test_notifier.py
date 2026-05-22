@@ -11,18 +11,18 @@ from courant.notifier import DesktopNotifier, FakeNotifier
 def test_fake_notifier_records_calls():
     n = FakeNotifier()
     n.notify(
-        title="Eau",
-        body="Bois !",
+        title="Water",
+        body="Drink !",
         icon="💧",
-        actions=[("ack", "Fait"), ("snooze", "Snooze")],
+        actions=[("ack", "Done"), ("snooze", "Snooze")],
         on_action=lambda a: None,
     )
     assert len(n.calls) == 1
     call = n.calls[0]
-    assert call.title == "Eau"
-    assert call.body == "Bois !"
+    assert call.title == "Water"
+    assert call.body == "Drink !"
     assert call.icon == "💧"
-    assert call.actions == [("ack", "Fait"), ("snooze", "Snooze")]
+    assert call.actions == [("ack", "Done"), ("snooze", "Snooze")]
 
 
 def test_fake_notifier_trigger_action_calls_back():

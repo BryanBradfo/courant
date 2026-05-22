@@ -100,7 +100,7 @@ def test_status_with_db_shows_reminder_count(
         "INSERT INTO reminders"
         " (name, message, interval_minutes, created_at, enabled)"
         " VALUES (?, ?, ?, ?, ?)",
-        ("Eau", "Bois de l'eau !", 60, "2026-01-01T00:00:00", 1),
+        ("Water", "Drink water!", 60, "2026-01-01T00:00:00", 1),
     )
     conn.commit()
     conn.close()
@@ -109,7 +109,7 @@ def test_status_with_db_shows_reminder_count(
     assert exit_code == 0
     out = capsys.readouterr().out
     assert "1" in out
-    assert "eau" in out.lower() or "reminder" in out.lower()
+    assert "water" in out.lower() or "reminder" in out.lower()
 
 
 def test_stop_when_no_systemd_prints_instructions(

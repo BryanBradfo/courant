@@ -117,7 +117,7 @@ class ReminderService:
     def _actions_for(self, r: Reminder) -> list[tuple[str, str]]:
         actions = []
         if r.tracked:
-            label = f"+1 {r.unit_label}" if r.unit_label else "Fait ✓"
+            label = f"+1 {r.unit_label}" if r.unit_label else "Done ✓"
             actions.append(("ack", label))
         else:
             actions.append(("ack", "OK"))

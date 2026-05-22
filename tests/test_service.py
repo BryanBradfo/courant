@@ -18,18 +18,18 @@ def service(memory_db: sqlite3.Connection) -> ReminderService:
     return ReminderService(conn=memory_db, snooze_minutes_default=10)
 
 
-def _new_reminder(name: str = "Eau") -> Reminder:
+def _new_reminder(name: str = "Water") -> Reminder:
     return Reminder(
         id=None,
         name=name,
-        message="Hydrate-toi",
+        message="Stay hydrated",
         icon="💧",
         interval_minutes=45,
         active_hours=(time(0, 0), time(23, 59)),
         active_days=frozenset(Weekday),
         enabled=True,
         tracked=True,
-        unit_label="verre",
+        unit_label="glass",
         unit_amount=250,
         daily_goal=8,
         created_at=datetime(2026, 5, 21, 10, 0),
@@ -228,9 +228,9 @@ def test_seed_default_reminders_on_empty_db(service: ReminderService):
     reminders = service.list_reminders()
     assert len(reminders) == 3
     names = [r.name for r in reminders]
-    assert "Boire de l'eau" in names
-    assert "Pause yeux (20-20-20)" in names
-    assert "Étirements" in names
+    assert "Drink water" in names
+    assert "Eye break (20-20-20)" in names
+    assert "Stretch" in names
 
 
 def test_seed_default_reminders_is_noop_when_not_empty(service: ReminderService):
