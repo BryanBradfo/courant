@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Courant - Cozy reminders for developers</title>
+  <meta name="description" content="Open-source Linux desktop reminders to drink water, rest your eyes, and stretch. Beautiful by design, local-first, free forever.">
+
+  <!-- Canonical -->
+  <link rel="canonical" href="https://courant.bryanbradfo.me/">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Courant">
+  <meta property="og:title" content="Courant - Cozy reminders for developers">
+  <meta property="og:description" content="Open-source Linux desktop reminders to drink water, rest your eyes, and stretch. Beautiful by design, local-first, free forever.">
+  <meta property="og:url" content="https://courant.bryanbradfo.me/">
+  <meta property="og:image" content="https://courant.bryanbradfo.me/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Courant - Cozy reminders for developers">
+  <meta name="twitter:description" content="Open-source Linux desktop reminders to drink water, rest your eyes, and stretch. Beautiful by design, local-first, free forever.">
+  <meta name="twitter:image" content="https://courant.bryanbradfo.me/og-image.png">
+
+  <!-- Favicon + theme color -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <meta name="theme-color" content="#1a1a2e">
+
+  <!-- Google Fonts : Fraunces for display, Inter for UI, JetBrains Mono for code -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Landing stylesheet -->
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+  <!-- Hero background video, fixed behind everything -->
+  <video id="hero-video" autoplay loop muted playsinline aria-hidden="true">
+    <source src="https://github.com/BryanBradfo/courant/releases/download/scenes-v1/cozy-cabin.mp4" type="video/mp4">
+  </video>
+  <div id="hero-overlay" aria-hidden="true"></div>
+
+  <!-- Top navigation -->
+  <nav class="cozy-nav" aria-label="Primary">
+    <a href="/" class="brand" aria-label="Courant home">Courant</a>
+    <div class="nav-links">
+      <a href="https://github.com/BryanBradfo/courant" class="nav-link" aria-label="View Courant on GitHub" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="currentColor">
+          <path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.1.79-.25.79-.56v-2.18c-3.2.7-3.87-1.37-3.87-1.37-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.03 1.76 2.69 1.25 3.34.96.1-.75.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.18-3.1-.12-.29-.51-1.46.11-3.04 0 0 .96-.31 3.15 1.18a10.94 10.94 0 0 1 5.72 0c2.19-1.49 3.15-1.18 3.15-1.18.62 1.58.23 2.75.11 3.04.74.81 1.18 1.84 1.18 3.1 0 4.42-2.69 5.39-5.25 5.68.41.36.78 1.06.78 2.13v3.16c0 .31.21.67.8.56C20.21 21.38 23.5 17.08 23.5 12 23.5 5.65 18.35.5 12 .5z"/>
+        </svg>
+        <span>GitHub</span>
+      </a>
+      <a href="https://pypi.org/project/courant/" class="nav-link" aria-label="View Courant on PyPI" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="currentColor">
+          <path d="M11.7 0a2.5 2.5 0 0 0-2.5 2.5v3.4h5v.7H4.5a2.5 2.5 0 0 0-2.5 2.5v5a2.5 2.5 0 0 0 2.5 2.5h2v-3.4a2.5 2.5 0 0 1 2.5-2.5h5.2a2.5 2.5 0 0 0 2.5-2.5V2.5A2.5 2.5 0 0 0 14.3 0h-2.6zm-1.4 1.7a.8.8 0 1 1 0 1.6.8.8 0 0 1 0-1.6zM18.5 6.7v3.4a2.5 2.5 0 0 1-2.5 2.5h-5.2a2.5 2.5 0 0 0-2.5 2.5v5a2.5 2.5 0 0 0 2.5 2.5h2.6a2.5 2.5 0 0 0 2.5-2.5v-3.4h-5v-.7h9.7a2.5 2.5 0 0 0 2.5-2.5v-5a2.5 2.5 0 0 0-2.5-2.5h-2zm-4.8 13.6a.8.8 0 1 1 0 1.6.8.8 0 0 1 0-1.6z"/>
+        </svg>
+        <span>PyPI</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- Section 1 : Hero -->
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="hero-inner">
+      <h1 id="hero-title" class="hero-title">Courant</h1>
+      <p class="hero-tagline">Cozy reminders for developers to drink water, rest your eyes, and stretch.</p>
+
+      <div class="install-block" role="group" aria-label="Install command">
+        <code class="install-code">pipx install courant</code>
+        <button class="copy-btn" data-copy="pipx install courant" aria-label="Copy install command">
+          <svg class="copy-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
+          <svg class="check-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          <span class="copy-label">Copy</span>
+          <span class="copied-label">Copied!</span>
+        </button>
+      </div>
+
+      <a href="https://github.com/BryanBradfo/courant" class="hero-secondary" target="_blank" rel="noopener">
+        View on GitHub <span aria-hidden="true">&rarr;</span>
+      </a>
+
+      <p class="hero-caption">Free, open-source, Linux-first.</p>
+    </div>
+  </section>
+
+  <!-- Section 2 : Why Courant -->
+  <section class="section" aria-labelledby="why-title">
+    <div class="section-inner">
+      <h2 id="why-title" class="section-title" data-reveal>Built for focus, not interruption</h2>
+      <div class="card-grid card-grid-3">
+
+        <article class="panel-card" data-reveal>
+          <div class="card-icon" aria-hidden="true">
+            <svg viewBox="0 0 32 32" width="32" height="32" fill="currentColor">
+              <path d="M16 4 C 10 12, 8 18, 12 24 C 16 30, 20 28, 20 22 C 20 18, 18 14, 16 4 Z"/>
+            </svg>
+          </div>
+          <h3 class="card-title">Gentle nudges</h3>
+          <p class="card-text">Configurable intervals between 09:00 and 18:00 by default, weekdays only. Never during deep work.</p>
+        </article>
+
+        <article class="panel-card" data-reveal>
+          <div class="card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/>
+              <path d="M19 14l.8 2.2L22 17l-2.2.8L19 20l-.8-2.2L16 17l2.2-.8L19 14z"/>
+              <path d="M5 16l.6 1.7L7.3 18l-1.7.6L5 20l-.6-1.4L2.7 18l1.7-.3L5 16z"/>
+            </svg>
+          </div>
+          <h3 class="card-title">Beautiful by design</h3>
+          <p class="card-text">Ambient video scenes, lofi music, glassmorphism UI. Inspired by studywithme.io. Your reminder dashboard you actually want to look at.</p>
+        </article>
+
+        <article class="panel-card" data-reveal>
+          <div class="card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="11" width="16" height="10" rx="2"/>
+              <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+              <circle cx="12" cy="16" r="1.2" fill="currentColor"/>
+            </svg>
+          </div>
+          <h3 class="card-title">Local-first privacy</h3>
+          <p class="card-text">Runs entirely on your machine. No accounts, no cloud, no telemetry. Your habits stay yours.</p>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!--
+    Section 3 : Screenshots
+    Hidden until web/screenshots/{dashboard,settings,audio}.webp exist.
+    Uncomment when assets land. See /tmp/courant-screenshots.txt for capture steps.
+
+    <section class="section" aria-labelledby="screenshots-title">
+      <div class="section-inner">
+        <h2 id="screenshots-title" class="section-title" data-reveal>A reminder dashboard you will actually enjoy</h2>
+        <div class="screenshot-grid" data-reveal>
+          <figure class="screenshot-figure">
+            <img src="/screenshots/dashboard.webp" loading="lazy" alt="Courant dashboard showing daily reminder progress and a cozy cabin background scene.">
+          </figure>
+          <figure class="screenshot-figure">
+            <img src="/screenshots/settings.webp" loading="lazy" alt="Courant settings page with ambient scene picker and reminder schedule controls.">
+          </figure>
+          <figure class="screenshot-figure">
+            <img src="/screenshots/audio.webp" loading="lazy" alt="Courant lofi music widget docked in the corner of the web UI.">
+          </figure>
+        </div>
+        <p class="section-caption" data-reveal>Six ambient video scenes. Six lofi music tracks. Customize everything.</p>
+      </div>
+    </section>
+  -->
+
+  <!-- Section 4 : Quick install -->
+  <section class="section" aria-labelledby="install-title">
+    <div class="section-inner section-inner-narrow">
+      <h2 id="install-title" class="section-title" data-reveal>Get started in 30 seconds</h2>
+
+      <div class="code-block" data-reveal>
+        <pre id="install-snippet"><code>pipx install courant
+courant start
+open http://localhost:8765</code></pre>
+        <button class="copy-btn copy-btn-block" data-copy="pipx install courant&#10;courant start&#10;open http://localhost:8765" aria-label="Copy install commands">
+          <svg class="copy-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
+          <svg class="check-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          <span class="copy-label">Copy</span>
+          <span class="copied-label">Copied!</span>
+        </button>
+      </div>
+
+      <p class="section-paragraph" data-reveal>Then it runs in the background. The web UI is at localhost:8765 ready when you need it.</p>
+
+      <a href="https://github.com/BryanBradfo/courant#manual--dev-install" class="text-link" data-reveal target="_blank" rel="noopener">
+        Or set up auto-start with systemd <span aria-hidden="true">&rarr;</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- Section 5 : Features grid -->
+  <section class="section" aria-labelledby="features-title">
+    <div class="section-inner">
+      <h2 id="features-title" class="section-title" data-reveal>Everything in the box</h2>
+      <div class="card-grid card-grid-3 card-grid-tight">
+
+        <article class="feature-card" data-reveal>
+          <div class="feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 8l3-3 3 3M3 5v10M21 16l-3 3-3-3M21 19V9"/>
+              <rect x="11" y="6" width="8" height="12" rx="1"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">Six ambient scenes</h3>
+          <p class="feature-text">Cozy cabin, retro moon, night train, cat sunrise, cat in the rain, lofi study.</p>
+        </article>
+
+        <article class="feature-card" data-reveal>
+          <div class="feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 18V5l12-2v13"/>
+              <circle cx="6" cy="18" r="3"/>
+              <circle cx="18" cy="16" r="3"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">Six lofi music tracks</h3>
+          <p class="feature-text">Cozy night, mellow, study, focus, daydream, jazzy.</p>
+        </article>
+
+        <article class="feature-card" data-reveal>
+          <div class="feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9"/>
+              <polyline points="12 7 12 12 15 14"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">Customizable intervals</h3>
+          <p class="feature-text">Water, eye breaks, stretching, or whatever you need.</p>
+        </article>
+
+        <article class="feature-card" data-reveal>
+          <div class="feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 1 0 9-9"/>
+              <polyline points="3 4 3 12 11 12"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">Daily auto-reset</h3>
+          <p class="feature-text">Counters reset at midnight automatically.</p>
+        </article>
+
+        <article class="feature-card" data-reveal>
+          <div class="feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5z"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">D-Bus notifications</h3>
+          <p class="feature-text">Native Linux desktop notifications with snooze and +1 actions.</p>
+        </article>
+
+        <article class="feature-card" data-reveal>
+          <div class="feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="12" rx="2"/>
+              <line x1="8" y1="20" x2="16" y2="20"/>
+              <line x1="12" y1="16" x2="12" y2="20"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">systemd integration</h3>
+          <p class="feature-text">Auto-starts on login as a user service.</p>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 6 : Footer -->
+  <footer class="site-footer" aria-labelledby="footer-heading">
+    <h2 id="footer-heading" class="sr-only">Site footer</h2>
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <span class="footer-brand-name">Courant</span>
+        <span class="footer-version">v0.1.2</span>
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/BryanBradfo/courant" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://pypi.org/project/courant/" target="_blank" rel="noopener">PyPI</a>
+        <a href="https://github.com/BryanBradfo/courant/blob/main/LICENSE" target="_blank" rel="noopener">License (MIT)</a>
+        <a href="https://github.com/BryanBradfo/courant/blob/main/CODE_OF_CONDUCT.md" target="_blank" rel="noopener">Code of Conduct</a>
+      </div>
+      <div class="footer-credit">
+        Built by <a href="https://github.com/BryanBradfo" target="_blank" rel="noopener">@BryanBradfo</a> with Claude
+      </div>
+    </div>
+    <div class="footer-bottom">
+      Released May 2026. MIT licensed. Free forever.
+    </div>
+  </footer>
+
+  <script src="/main.js" defer></script>
+</body>
+</html>

@@ -25,3 +25,6 @@ courant/static/sounds/
 
 # OS
 .DS_Store
+
+# Vercel (landing page deploy artifacts)
+.vercel/
