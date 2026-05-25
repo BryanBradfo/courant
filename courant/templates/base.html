@@ -27,6 +27,8 @@
          poster=""
          class="scene-video"></video>
 
+  <div id="toast-root" aria-live="polite" aria-atomic="false"></div>
+
   <div id="audio-player" class="audio-player" aria-label="Ambient audio player">
     <audio id="audio-element" loop preload="none"></audio>
 
@@ -88,6 +90,7 @@
 
   <script src="/static/scene-loader.js"></script>
   <script src="/static/audio-player.js"></script>
+  <script src="/static/sse-notifier.js"></script>
   <script>
     // Reload the page right after midnight so tracked-reminder counters
     // reset their displayed value to 0 for the new day. The underlying

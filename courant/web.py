@@ -7,19 +7,26 @@ in-memory DB).
 """
 from __future__ import annotations
 
+import asyncio
 import json
+import logging
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
 
 from fastapi import FastAPI, Form, HTTPException, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+from courant.events_bus import EventBus
 from courant.models import Reminder, format_active_days, parse_active_days, parse_time
 from courant.paths import audio_dir, videos_dir
 from courant.repository import get_setting, set_setting
 from courant.service import ReminderService
+
+logger = logging.getLogger(__name__)
 
 _PACKAGE_DIR = Path(__file__).parent
 _TEMPLATES_DIR = _PACKAGE_DIR / "templates"
@@ -51,13 +58,20 @@ def _load_audio_registry() -> dict[str, dict[str, str]]:
 _AUDIO_REGISTRY = _load_audio_registry()
 
 
-def create_app(service: ReminderService) -> FastAPI:
+def create_app(service: ReminderService, bus: EventBus | None = None) -> FastAPI:
+    @asynccontextmanager
+    async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+        if bus is not None:
+            bus.bind_loop(asyncio.get_running_loop())
+        yield
+
     app = FastAPI(
         title="Courant",
         description="A cozy reminder for developers.",
         # Disable the default /docs and /redoc — internal-only API.
         docs_url=None,
         redoc_url=None,
+        lifespan=lifespan,
     )
 
     def _base_context() -> dict[str, str]:
@@ -87,6 +101,47 @@ def create_app(service: ReminderService) -> FastAPI:
     @app.get("/api/audio")
     async def api_audio() -> dict[str, dict[str, str]]:
         return _AUDIO_REGISTRY
+
+    @app.get("/api/stream")
+    async def stream(request: Request) -> StreamingResponse:
+        """Server-Sent Events stream for live UI notifications.
+
+        Returns a long-lived ``text/event-stream`` connection. Each fired
+        reminder is delivered as one SSE message with a JSON payload.
+        Idle keepalive pings (a comment line every 15 s) keep proxies from
+        timing the connection out.
+        """
+        if bus is None:
+            raise HTTPException(status_code=503, detail="Event bus not configured")
+
+        queue = bus.subscribe()
+
+        async def event_generator() -> AsyncIterator[bytes]:
+            try:
+                yield b"retry: 2000\n\n"  # client reconnect delay
+                while True:
+                    if await request.is_disconnected():
+                        break
+                    try:
+                        event = await asyncio.wait_for(queue.get(), timeout=15.0)
+                    except TimeoutError:
+                        # keepalive comment, ignored by browsers
+                        yield b": keepalive\n\n"
+                        continue
+                    payload = json.dumps(event)
+                    yield f"data: {payload}\n\n".encode()
+            finally:
+                bus.unsubscribe(queue)
+
+        return StreamingResponse(
+            event_generator(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "X-Accel-Buffering": "no",  # disable proxy buffering
+                "Connection": "keep-alive",
+            },
+        )
 
     @app.get("/", response_class=HTMLResponse)
     async def dashboard(request: Request) -> HTMLResponse:

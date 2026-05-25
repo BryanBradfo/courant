@@ -81,22 +81,26 @@ class ReminderService:
         reminder_id: int,
         notifier: Notifier,
         now: datetime | None = None,
-    ) -> None:
+    ) -> Reminder | None:
         """Trigger a notification for this reminder, if conditions allow.
 
         Logs a 'fired' event and dispatches to notifier. Silently no-ops when:
         - reminder doesn't exist
         - reminder is paused
         - now is outside active window
+
+        Returns the Reminder that actually fired, or None if conditions
+        prevented firing. Callers (scheduler) use the return value to
+        publish a UI event only on real fires.
         """
         now = now or datetime.now()
         r = self.get_reminder(reminder_id)
         if r is None or not r.enabled:
-            return
+            return None
         if r.paused_until and now < r.paused_until:
-            return
+            return None
         if not self.is_in_active_window(r, now):
-            return
+            return None
 
         insert_event(self._conn, Event(
             id=None,
@@ -113,6 +117,7 @@ class ReminderService:
             actions=self._actions_for(r),
             on_action=lambda action_id: self.handle_action(reminder_id, action_id),
         )
+        return r
 
     def _actions_for(self, r: Reminder) -> list[tuple[str, str]]:
         actions = []
