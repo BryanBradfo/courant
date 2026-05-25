@@ -92,6 +92,136 @@
   }
 
   /**
+   * Ambient audio tracks served from the audio-v1 GitHub release.
+   * Keep slug list in sync with courant/data/audio.json in the main app.
+   */
+  const AUDIO_TRACKS = {
+    'cozy-night': {
+      name: 'Cozy Night',
+      url: 'https://github.com/BryanBradfo/courant/releases/download/audio-v1/cozy-night.mp3',
+    },
+    'mellow': {
+      name: 'Mellow Lofi',
+      url: 'https://github.com/BryanBradfo/courant/releases/download/audio-v1/mellow.mp3',
+    },
+    'study': {
+      name: 'Study Time',
+      url: 'https://github.com/BryanBradfo/courant/releases/download/audio-v1/study.mp3',
+    },
+    'focus': {
+      name: 'Deep Focus',
+      url: 'https://github.com/BryanBradfo/courant/releases/download/audio-v1/focus.mp3',
+    },
+    'daydream': {
+      name: 'Daydream',
+      url: 'https://github.com/BryanBradfo/courant/releases/download/audio-v1/daydream.mp3',
+    },
+    'jazzy': {
+      name: 'Jazzy Love',
+      url: 'https://github.com/BryanBradfo/courant/releases/download/audio-v1/jazzy.mp3',
+    },
+  };
+
+  const LS_SLUG = 'courant_landing_audio_slug';
+  const LS_VOLUME = 'courant_landing_audio_volume';
+
+  function safeGet(key) {
+    try { return window.localStorage.getItem(key); } catch (e) { return null; }
+  }
+  function safeSet(key, value) {
+    try { window.localStorage.setItem(key, value); } catch (e) { /* private mode */ }
+  }
+
+  /**
+   * initAudioPlayer
+   * Wire the floating bottom-right audio pill. Streams the selected mp3
+   * directly from the audio-v1 GitHub release. Persists the last track and
+   * volume in localStorage. Never autoplays (browsers block it anyway).
+   */
+  function initAudioPlayer() {
+    const player = document.getElementById('audio-player');
+    if (!player) return;
+    const audio = document.getElementById('audio-element');
+    const toggle = document.getElementById('audio-toggle');
+    const trackName = document.getElementById('audio-track-name');
+    const select = document.getElementById('audio-select');
+    const volume = document.getElementById('audio-volume');
+
+    function showStopped() {
+      toggle.textContent = '♪';
+      toggle.setAttribute('aria-label', 'Play ambient audio');
+    }
+    function showPlaying() {
+      toggle.textContent = '⏸';
+      toggle.setAttribute('aria-label', 'Pause ambient audio');
+    }
+
+    function loadTrack(slug, autoPlay) {
+      if (!slug) {
+        audio.pause();
+        audio.removeAttribute('src');
+        trackName.textContent = 'Lofi';
+        showStopped();
+        safeSet(LS_SLUG, '');
+        return;
+      }
+      const meta = AUDIO_TRACKS[slug];
+      if (!meta) return;
+      audio.src = meta.url;
+      trackName.textContent = meta.name;
+      safeSet(LS_SLUG, slug);
+      if (!autoPlay) { showStopped(); return; }
+      const playPromise = audio.play();
+      if (playPromise && typeof playPromise.then === 'function') {
+        playPromise.then(showPlaying).catch(showStopped);
+      }
+    }
+
+    toggle.addEventListener('click', () => {
+      if (!audio.src) {
+        // First click with nothing loaded: pick first real track
+        const firstSlug = Object.keys(AUDIO_TRACKS)[0];
+        select.value = firstSlug;
+        loadTrack(firstSlug, true);
+        return;
+      }
+      if (audio.paused) {
+        const p = audio.play();
+        if (p && typeof p.then === 'function') p.then(showPlaying).catch(showStopped);
+      } else {
+        audio.pause();
+        showStopped();
+      }
+    });
+
+    select.addEventListener('change', (e) => loadTrack(e.target.value, true));
+
+    volume.addEventListener('input', (e) => {
+      const v = Number(e.target.value);
+      audio.volume = v / 100;
+      safeSet(LS_VOLUME, String(v));
+    });
+
+    audio.addEventListener('ended', showStopped); // loop is on, but just in case
+    audio.addEventListener('pause', () => { if (!audio.ended) showStopped(); });
+    audio.addEventListener('play', showPlaying);
+
+    // Restore previous state (no autoplay - browsers block it)
+    const savedVolume = safeGet(LS_VOLUME);
+    if (savedVolume !== null) {
+      volume.value = savedVolume;
+      audio.volume = Number(savedVolume) / 100;
+    } else {
+      audio.volume = 0.5;
+    }
+    const savedSlug = safeGet(LS_SLUG);
+    if (savedSlug && AUDIO_TRACKS[savedSlug]) {
+      select.value = savedSlug;
+      loadTrack(savedSlug, false);
+    }
+  }
+
+  /**
    * initVideoFallback
    * If the hero <video> errors (e.g., the GitHub release URL is unreachable
    * or the file 404s), tag <body> with .video-failed so the CSS swaps in a
@@ -115,16 +245,16 @@
     }, 6000);
   }
 
-  // Bootstrap on DOMContentLoaded so we don't race the markup
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      initCopyButtons();
-      initScrollReveal();
-      initVideoFallback();
-    });
-  } else {
+  function bootstrap() {
     initCopyButtons();
     initScrollReveal();
     initVideoFallback();
+    initAudioPlayer();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootstrap);
+  } else {
+    bootstrap();
   }
 })();
