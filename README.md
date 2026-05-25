@@ -116,16 +116,16 @@ Contributions are welcome — especially:
 - **New ambient scenes** (each scene is a self-contained Canvas module — see [`docs/ADDING_A_SCENE.md`](docs/ADDING_A_SCENE.md))
 - **Bug reports** from running on non-GNOME desktops (Plasma, XFCE, Hyprland…)
 
+## Star History
+
+<a href="https://www.star-history.com/?repos=BryanBradfo%2Fcourant&type=date&logscale=&legend=bottom-right">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=BryanBradfo/courant&type=date&theme=dark&logscale&legend=bottom-right" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=BryanBradfo/courant&type=date&logscale&legend=bottom-right" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=BryanBradfo/courant&type=date&logscale&legend=bottom-right" />
+ </picture>
+</a>
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
-
-## Star History
-
-<a href="https://www.star-history.com/?repos=bryanbradfo%2Fcourant&type=date&legend=top-left">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=bryanbradfo/courant&type=date&theme=dark&legend=bottom-right" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=bryanbradfo/courant&type=date&legend=bottom-right" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=bryanbradfo/courant&type=date&legend=bottom-right" />
- </picture>
-</a>
