@@ -98,29 +98,37 @@
   const AUDIO_TRACKS = {
     'cozy-night': {
       name: 'Cozy Night',
+      author: 'fassounds',
       url: 'https://github.com/BryanBradfo/courant/releases/download/audio-v1/cozy-night.mp3',
     },
     'mellow': {
       name: 'Mellow Lofi',
+      author: 'leberch',
       url: 'https://github.com/BryanBradfo/courant/releases/download/audio-v1/mellow.mp3',
     },
     'study': {
       name: 'Study Time',
+      author: 'Lofi Music Library',
       url: 'https://github.com/BryanBradfo/courant/releases/download/audio-v1/study.mp3',
     },
     'focus': {
       name: 'Deep Focus',
+      author: 'pulsebox',
       url: 'https://github.com/BryanBradfo/courant/releases/download/audio-v1/focus.mp3',
     },
     'daydream': {
       name: 'Daydream',
+      author: 'pulsebox',
       url: 'https://github.com/BryanBradfo/courant/releases/download/audio-v1/daydream.mp3',
     },
     'jazzy': {
       name: 'Jazzy Love',
+      author: 'sonican',
       url: 'https://github.com/BryanBradfo/courant/releases/download/audio-v1/jazzy.mp3',
     },
   };
+
+  const AUDIO_ORDER = ['cozy-night', 'mellow', 'study', 'focus', 'daydream', 'jazzy'];
 
   const LS_SLUG = 'courant_landing_audio_slug';
   const LS_VOLUME = 'courant_landing_audio_volume';
@@ -134,55 +142,72 @@
 
   /**
    * initAudioPlayer
-   * Wire the floating bottom-right audio pill. Streams the selected mp3
-   * directly from the audio-v1 GitHub release. Persists the last track and
-   * volume in localStorage. Never autoplays (browsers block it anyway).
+   * Wire the Spotify-style mini-player. Streams the selected mp3 from the
+   * audio-v1 GitHub release. Prev/next buttons cycle through AUDIO_ORDER.
+   * Persists the last track + volume in localStorage. Never autoplays.
    */
   function initAudioPlayer() {
     const player = document.getElementById('audio-player');
     if (!player) return;
     const audio = document.getElementById('audio-element');
     const toggle = document.getElementById('audio-toggle');
-    const trackName = document.getElementById('audio-track-name');
-    const select = document.getElementById('audio-select');
-    const volume = document.getElementById('audio-volume');
+    const titleEl = document.getElementById('audio-track-title');
+    const artistEl = document.getElementById('audio-track-artist');
+    const prevBtn = document.getElementById('audio-prev');
+    const nextBtn = document.getElementById('audio-next');
+
+    let currentSlug = null;
 
     function showStopped() {
-      toggle.textContent = '♪';
+      toggle.classList.remove('is-playing');
       toggle.setAttribute('aria-label', 'Play ambient audio');
     }
     function showPlaying() {
-      toggle.textContent = '⏸';
+      toggle.classList.add('is-playing');
       toggle.setAttribute('aria-label', 'Pause ambient audio');
     }
 
+    function setMeta(slug) {
+      if (slug && AUDIO_TRACKS[slug]) {
+        titleEl.textContent = AUDIO_TRACKS[slug].name;
+        artistEl.textContent = AUDIO_TRACKS[slug].author;
+      } else {
+        titleEl.textContent = 'Lofi';
+        artistEl.textContent = 'Courant ambient';
+      }
+    }
+
     function loadTrack(slug, autoPlay) {
-      if (!slug) {
+      if (!slug || !AUDIO_TRACKS[slug]) {
         audio.pause();
         audio.removeAttribute('src');
-        trackName.textContent = 'Lofi';
+        currentSlug = null;
+        setMeta(null);
         showStopped();
         safeSet(LS_SLUG, '');
         return;
       }
-      const meta = AUDIO_TRACKS[slug];
-      if (!meta) return;
-      audio.src = meta.url;
-      trackName.textContent = meta.name;
+      audio.src = AUDIO_TRACKS[slug].url;
+      currentSlug = slug;
+      setMeta(slug);
       safeSet(LS_SLUG, slug);
       if (!autoPlay) { showStopped(); return; }
-      const playPromise = audio.play();
-      if (playPromise && typeof playPromise.then === 'function') {
-        playPromise.then(showPlaying).catch(showStopped);
+      const p = audio.play();
+      if (p && typeof p.then === 'function') {
+        p.then(showPlaying).catch(showStopped);
       }
+    }
+
+    function cycleTrack(direction) {
+      const len = AUDIO_ORDER.length;
+      const baseIdx = currentSlug ? AUDIO_ORDER.indexOf(currentSlug) : -1;
+      const nextIdx = (baseIdx + direction + len) % len;
+      loadTrack(AUDIO_ORDER[nextIdx], true);
     }
 
     toggle.addEventListener('click', () => {
       if (!audio.src) {
-        // First click with nothing loaded: pick first real track
-        const firstSlug = Object.keys(AUDIO_TRACKS)[0];
-        select.value = firstSlug;
-        loadTrack(firstSlug, true);
+        loadTrack(AUDIO_ORDER[0], true);
         return;
       }
       if (audio.paused) {
@@ -194,30 +219,21 @@
       }
     });
 
-    select.addEventListener('change', (e) => loadTrack(e.target.value, true));
+    prevBtn.addEventListener('click', () => cycleTrack(-1));
+    nextBtn.addEventListener('click', () => cycleTrack(1));
 
-    volume.addEventListener('input', (e) => {
-      const v = Number(e.target.value);
-      audio.volume = v / 100;
-      safeSet(LS_VOLUME, String(v));
-    });
-
-    audio.addEventListener('ended', showStopped); // loop is on, but just in case
-    audio.addEventListener('pause', () => { if (!audio.ended) showStopped(); });
     audio.addEventListener('play', showPlaying);
+    audio.addEventListener('pause', () => { if (!audio.ended) showStopped(); });
+    audio.addEventListener('ended', showStopped); // loop is on, just defensive
 
-    // Restore previous state (no autoplay - browsers block it)
+    // Restore previous state (no autoplay; browsers block it)
     const savedVolume = safeGet(LS_VOLUME);
-    if (savedVolume !== null) {
-      volume.value = savedVolume;
-      audio.volume = Number(savedVolume) / 100;
-    } else {
-      audio.volume = 0.5;
-    }
+    audio.volume = savedVolume !== null ? Number(savedVolume) / 100 : 0.5;
     const savedSlug = safeGet(LS_SLUG);
     if (savedSlug && AUDIO_TRACKS[savedSlug]) {
-      select.value = savedSlug;
       loadTrack(savedSlug, false);
+    } else {
+      setMeta(null);
     }
   }
 
