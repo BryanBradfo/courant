@@ -6,7 +6,10 @@
 <div class="flex justify-center pt-12">
   <div class="panel panel-narrow w-full">
     <div class="flex items-baseline justify-between mb-6">
-      <h1 class="display-1">Today</h1>
+      <div>
+        <h1 class="display-1">Today</h1>
+        <p id="today-date" class="text-sm mt-1" style="color: var(--text-secondary)" data-locale-date></p>
+      </div>
       <span class="text-sm" style="color: var(--text-muted)">
         {{ reminders|length }} reminder{{ 's' if reminders|length != 1 else '' }}
       </span>

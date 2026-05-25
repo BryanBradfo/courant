@@ -27,18 +27,49 @@
          poster=""
          class="scene-video"></video>
 
-  <div id="audio-player" class="audio-player">
+  <div id="audio-player" class="audio-player" aria-label="Ambient audio player">
     <audio id="audio-element" loop preload="none"></audio>
-    <button id="audio-toggle" class="audio-toggle" aria-label="Play/pause ambient audio">
-      ♪
-    </button>
-    <span id="audio-track-name" class="audio-track-name">—</span>
-    <select id="audio-select" class="cozy-select audio-select" aria-label="Select audio track">
-      <option value="">Silence</option>
-      <!-- options populated by JS from /api/audio -->
-    </select>
-    <input id="audio-volume" type="range" min="0" max="100" value="50"
-           class="audio-volume" aria-label="Volume">
+
+    <div class="audio-art" aria-hidden="true">
+      <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="audio-art-grad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#3b3470"/>
+            <stop offset="55%" stop-color="#7a4a8f"/>
+            <stop offset="100%" stop-color="#d99a6c"/>
+          </linearGradient>
+        </defs>
+        <rect width="48" height="48" rx="6" fill="url(#audio-art-grad)"/>
+        <path d="M24 10 C 18 18, 16 24, 20 30 C 24 36, 28 34, 28 28 C 28 24, 26 20, 24 10 Z"
+              fill="rgba(255,255,255,0.92)"/>
+      </svg>
+    </div>
+
+    <div class="audio-meta">
+      <span id="audio-track-title" class="audio-track-title">Lofi</span>
+      <span id="audio-track-artist" class="audio-track-artist">Courant ambient</span>
+    </div>
+
+    <div class="audio-controls">
+      <button id="audio-prev" class="audio-control" type="button" aria-label="Previous track">
+        <svg class="audio-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/>
+        </svg>
+      </button>
+      <button id="audio-toggle" class="audio-control audio-toggle" type="button" aria-label="Play ambient audio">
+        <svg class="audio-icon icon-play" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M8 5v14l11-7z"/>
+        </svg>
+        <svg class="audio-icon icon-pause" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 4h4v16H6zM14 4h4v16h-4z"/>
+        </svg>
+      </button>
+      <button id="audio-next" class="audio-control" type="button" aria-label="Next track">
+        <svg class="audio-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M16 6h2v12h-2zM6 18l8.5-6L6 6z"/>
+        </svg>
+      </button>
+    </div>
   </div>
 
   <nav class="cozy-nav">
@@ -68,6 +99,19 @@
         now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 5
       );
       setTimeout(() => location.reload(), nextMidnight - now);
+    })();
+
+    // Fill any [data-locale-date] element with today's day + date in the
+    // user's browser locale (navigator.language). Reads naturally as
+    // "Monday, May 25, 2026" or "lundi 25 mai 2026" depending on locale.
+    (function renderLocaleDate() {
+      const targets = document.querySelectorAll('[data-locale-date]');
+      if (targets.length === 0) return;
+      const locale = (navigator.languages && navigator.languages[0]) || navigator.language || 'en-US';
+      const text = new Intl.DateTimeFormat(locale, {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+      }).format(new Date());
+      targets.forEach((el) => { el.textContent = text; });
     })();
   </script>
 </body>
