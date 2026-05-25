@@ -1,10 +1,23 @@
-# Courant
+# 💧 Courant - Cozy reminders for developers
 
-[![CI](https://github.com/BryanBradfo/courant/actions/workflows/ci.yml/badge.svg)](https://github.com/BryanBradfo/courant/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-blue)](pyproject.toml)
+<p align="center">
+    <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/BryanBradfo/courant/main/docs/assets/courant_dark.png">
+        <img src="https://raw.githubusercontent.com/BryanBradfo/courant/main/docs/assets/courant_light.png" alt="Courant" width="500">
+    </picture>
+</p>
 
-> A cozy reminder for developers — drink water, rest your eyes, stretch.
+<p align="center">
+  <strong>Drink water. Rest your eyes. Stretch.</strong>
+</p>
+
+<p align="center">
+  <a href="https://github.com/BryanBradfo/courant/actions/workflows/ci.yml?query=branch%3Amain"><img src="https://img.shields.io/github/actions/workflow/status/BryanBradfo/courant/ci.yml?branch=main&style=for-the-badge" alt="CI status"></a>
+  <a href="https://pypi.org/project/courant/"><img src="https://img.shields.io/pypi/v/courant?style=for-the-badge" alt="PyPI"></a>
+  <a href="https://github.com/BryanBradfo/courant/releases"><img src="https://img.shields.io/github/v/release/BryanBradfo/courant?include_prereleases&style=for-the-badge" alt="GitHub release"></a>
+  <a href="https://courant.bryanbradfo.me"><img src="https://img.shields.io/badge/Website-courant.bryanbradfo.me-7a4a8f?style=for-the-badge" alt="Website"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge" alt="MIT License"></a>
+</p>
 
 Linux desktop app that fires customizable system notifications, tracks your daily progress, and serves a small web UI on `localhost:8765` for CRUD and stats. The UI features a full-screen ambient scene (ocean depth, rain, sunset, forest, or night sky) with a glassmorphism panel on top. The product name "Courant" means *current* / *flow* in French — the gentle stream that nudges you toward healthier breaks.
 
