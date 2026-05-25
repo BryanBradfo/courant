@@ -1,84 +1,122 @@
-// audio-player.js — manages the ambient audio mini-player.
+// audio-player.js — Spotify-style mini-player wired to /api/audio.
 
-const player = document.getElementById('audio-player');
-const audio = document.getElementById('audio-element');
-const toggle = document.getElementById('audio-toggle');
-const trackName = document.getElementById('audio-track-name');
-const select = document.getElementById('audio-select');
-const volume = document.getElementById('audio-volume');
+(function () {
+  'use strict';
 
-let tracks = {};
+  const player = document.getElementById('audio-player');
+  if (!player) return;
+  const audio = document.getElementById('audio-element');
+  const toggle = document.getElementById('audio-toggle');
+  const titleEl = document.getElementById('audio-track-title');
+  const artistEl = document.getElementById('audio-track-artist');
+  const prevBtn = document.getElementById('audio-prev');
+  const nextBtn = document.getElementById('audio-next');
 
-async function loadTrackList() {
-  try {
-    const resp = await fetch('/api/audio');
-    tracks = await resp.json();
-    // Populate select
-    for (const [slug, meta] of Object.entries(tracks)) {
-      const opt = document.createElement('option');
-      opt.value = slug;
-      opt.textContent = meta.name;
-      select.appendChild(opt);
+  const LS_SLUG = 'courant_audio_slug';
+  const LS_VOLUME = 'courant_audio_volume';
+
+  let tracks = {};
+  let order = [];
+  let currentSlug = null;
+
+  function safeGet(key) {
+    try { return window.localStorage.getItem(key); } catch (e) { return null; }
+  }
+  function safeSet(key, value) {
+    try { window.localStorage.setItem(key, value); } catch (e) { /* private mode */ }
+  }
+
+  function showStopped() {
+    toggle.classList.remove('is-playing');
+    toggle.setAttribute('aria-label', 'Play ambient audio');
+  }
+  function showPlaying() {
+    toggle.classList.add('is-playing');
+    toggle.setAttribute('aria-label', 'Pause ambient audio');
+  }
+
+  function setMeta(slug) {
+    if (slug && tracks[slug]) {
+      titleEl.textContent = tracks[slug].name;
+      artistEl.textContent = tracks[slug].author || 'Courant ambient';
+    } else {
+      titleEl.textContent = 'Lofi';
+      artistEl.textContent = 'Courant ambient';
     }
-  } catch (e) {
-    console.warn('Failed to load audio registry', e);
   }
-}
 
-function setTrack(slug) {
-  if (!slug) {
-    audio.pause();
-    audio.removeAttribute('src');
-    trackName.textContent = '—';
-    toggle.textContent = '♪';
-    return;
+  function loadTrack(slug, autoPlay) {
+    if (!slug || !tracks[slug]) {
+      audio.pause();
+      audio.removeAttribute('src');
+      currentSlug = null;
+      setMeta(null);
+      showStopped();
+      safeSet(LS_SLUG, '');
+      return;
+    }
+    audio.src = tracks[slug].url;
+    currentSlug = slug;
+    setMeta(slug);
+    safeSet(LS_SLUG, slug);
+    if (!autoPlay) { showStopped(); return; }
+    const p = audio.play();
+    if (p && typeof p.then === 'function') {
+      p.then(showPlaying).catch((err) => {
+        console.warn('Audio play failed (file missing? run "courant install-audio")', err);
+        showStopped();
+      });
+    }
   }
-  const meta = tracks[slug];
-  if (!meta) return;
-  audio.src = meta.url;
-  trackName.textContent = meta.name;
-  audio.play().then(() => {
-    toggle.textContent = '⏸';
-    localStorage.setItem('courant_audio_slug', slug);
-  }).catch((err) => {
-    console.warn('Audio play failed (file missing?)', err);
-    toggle.textContent = '♪';
+
+  function cycleTrack(direction) {
+    if (order.length === 0) return;
+    const baseIdx = currentSlug ? order.indexOf(currentSlug) : -1;
+    const nextIdx = (baseIdx + direction + order.length) % order.length;
+    loadTrack(order[nextIdx], true);
+  }
+
+  toggle.addEventListener('click', () => {
+    if (!audio.src) {
+      if (order.length > 0) loadTrack(order[0], true);
+      return;
+    }
+    if (audio.paused) {
+      const p = audio.play();
+      if (p && typeof p.then === 'function') p.then(showPlaying).catch(showStopped);
+    } else {
+      audio.pause();
+      showStopped();
+    }
   });
-}
 
-toggle.addEventListener('click', () => {
-  if (!audio.src) return;
-  if (audio.paused) {
-    audio.play();
-    toggle.textContent = '⏸';
-  } else {
-    audio.pause();
-    toggle.textContent = '♪';
+  prevBtn.addEventListener('click', () => cycleTrack(-1));
+  nextBtn.addEventListener('click', () => cycleTrack(1));
+
+  audio.addEventListener('play', showPlaying);
+  audio.addEventListener('pause', () => { if (!audio.ended) showStopped(); });
+  audio.addEventListener('ended', showStopped);
+
+  async function bootstrap() {
+    try {
+      const resp = await fetch('/api/audio');
+      tracks = await resp.json();
+      order = Object.keys(tracks);
+    } catch (e) {
+      console.warn('Failed to load audio registry', e);
+      return;
+    }
+
+    const savedVolume = safeGet(LS_VOLUME);
+    audio.volume = savedVolume !== null ? Number(savedVolume) / 100 : 0.5;
+
+    const savedSlug = safeGet(LS_SLUG);
+    if (savedSlug && tracks[savedSlug]) {
+      loadTrack(savedSlug, false);
+    } else {
+      setMeta(null);
+    }
   }
-});
 
-select.addEventListener('change', (e) => {
-  setTrack(e.target.value);
-});
-
-volume.addEventListener('input', (e) => {
-  audio.volume = e.target.value / 100;
-  localStorage.setItem('courant_audio_volume', e.target.value);
-});
-
-// Restore last state
-(async () => {
-  await loadTrackList();
-  const savedVolume = localStorage.getItem('courant_audio_volume');
-  if (savedVolume) {
-    volume.value = savedVolume;
-    audio.volume = savedVolume / 100;
-  }
-  const savedSlug = localStorage.getItem('courant_audio_slug');
-  if (savedSlug && tracks[savedSlug]) {
-    select.value = savedSlug;
-    // Don't autoplay — browsers block autoplay with sound. User must click play.
-    audio.src = tracks[savedSlug].url;
-    trackName.textContent = tracks[savedSlug].name;
-  }
+  bootstrap();
 })();
