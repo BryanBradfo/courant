@@ -45,6 +45,26 @@
   </video>
   <div id="hero-overlay" aria-hidden="true"></div>
 
+  <!-- Ambient audio player, floating bottom-right.
+       Hardcoded track list points at the audio-v1 GitHub release. -->
+  <div id="audio-player" class="audio-player">
+    <audio id="audio-element" loop preload="none"></audio>
+    <button id="audio-toggle" class="audio-toggle" type="button"
+            aria-label="Play or pause ambient audio">♪</button>
+    <span id="audio-track-name" class="audio-track-name">Lofi</span>
+    <select id="audio-select" class="audio-select" aria-label="Select audio track">
+      <option value="">Silence</option>
+      <option value="cozy-night">Cozy Night</option>
+      <option value="mellow">Mellow Lofi</option>
+      <option value="study">Study Time</option>
+      <option value="focus">Deep Focus</option>
+      <option value="daydream">Daydream</option>
+      <option value="jazzy">Jazzy Love</option>
+    </select>
+    <input id="audio-volume" type="range" min="0" max="100" value="50"
+           class="audio-volume" aria-label="Volume">
+  </div>
+
   <!-- Top navigation -->
   <nav class="cozy-nav" aria-label="Primary">
     <a href="/" class="brand" aria-label="Courant home">Courant</a>
@@ -283,7 +303,7 @@ open http://localhost:8765</code></pre>
         <a href="https://github.com/BryanBradfo/courant/blob/main/CODE_OF_CONDUCT.md" target="_blank" rel="noopener">Code of Conduct</a>
       </div>
       <div class="footer-credit">
-        Built by <a href="https://github.com/BryanBradfo" target="_blank" rel="noopener">@BryanBradfo</a> with Claude
+        Built by <a href="https://github.com/BryanBradfo" target="_blank" rel="noopener">@BryanBradfo</a>
       </div>
     </div>
     <div class="footer-bottom">
