@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Courant{% endblock %}</title>
-  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="icon" type="image/x-icon" href="/static/favicon.ico" sizes="any">
 
   <!-- Tailwind for utility classes still in use elsewhere -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -101,17 +101,24 @@
       setTimeout(() => location.reload(), nextMidnight - now);
     })();
 
-    // Fill any [data-locale-date] element with today's day + date in the
-    // user's browser locale (navigator.language). Reads naturally as
-    // "Monday, May 25, 2026" or "lundi 25 mai 2026" depending on locale.
+    // Fill any [data-locale-date] element with today's day + date + time
+    // in the user's browser locale (navigator.language). Reads naturally as
+    // "Monday, May 25, 2026, 06:23 PM" or "lundi 25 mai 2026, 18:23".
+    // Refreshes every minute so the clock stays accurate.
     (function renderLocaleDate() {
       const targets = document.querySelectorAll('[data-locale-date]');
       if (targets.length === 0) return;
       const locale = (navigator.languages && navigator.languages[0]) || navigator.language || 'en-US';
-      const text = new Intl.DateTimeFormat(locale, {
+      const fmt = new Intl.DateTimeFormat(locale, {
         weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-      }).format(new Date());
-      targets.forEach((el) => { el.textContent = text; });
+        hour: '2-digit', minute: '2-digit',
+      });
+      function tick() {
+        const text = fmt.format(new Date());
+        targets.forEach((el) => { el.textContent = text; });
+      }
+      tick();
+      setInterval(tick, 60000);
     })();
   </script>
 </body>
