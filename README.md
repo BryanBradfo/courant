@@ -120,9 +120,9 @@ Contributions are welcome — especially:
 
 <a href="https://www.star-history.com/?repos=BryanBradfo%2Fcourant&type=date&logscale=&legend=bottom-right">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=BryanBradfo/courant&type=date&theme=dark&logscale&legend=bottom-right" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=BryanBradfo/courant&type=date&logscale&legend=bottom-right" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=BryanBradfo/courant&type=date&logscale&legend=bottom-right" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=BryanBradfo/courant&type=date&theme=dark&logscale&legend=bottom-right&sealed_token=tqJ08SHpQswHLVhuZ6KpiNlh3Zwgii1dnxOXQGo4Z3sJQ6zfycE-oDdtFcvO-1CVZidBMn8jFsYj_maWysAVLgrPAA1gxRcKf3N8wqN7G93WU1jR9qm0_UF3Rbuxq6XsFTzjTNqZAZzd1N3gTNtPUHHHQdc-DuIOzNL-RSZ3NGm9Pr4toVShX5qYCZg4" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=BryanBradfo/courant&type=date&logscale&legend=bottom-right&sealed_token=tqJ08SHpQswHLVhuZ6KpiNlh3Zwgii1dnxOXQGo4Z3sJQ6zfycE-oDdtFcvO-1CVZidBMn8jFsYj_maWysAVLgrPAA1gxRcKf3N8wqN7G93WU1jR9qm0_UF3Rbuxq6XsFTzjTNqZAZzd1N3gTNtPUHHHQdc-DuIOzNL-RSZ3NGm9Pr4toVShX5qYCZg4" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=BryanBradfo/courant&type=date&logscale&legend=bottom-right&sealed_token=tqJ08SHpQswHLVhuZ6KpiNlh3Zwgii1dnxOXQGo4Z3sJQ6zfycE-oDdtFcvO-1CVZidBMn8jFsYj_maWysAVLgrPAA1gxRcKf3N8wqN7G93WU1jR9qm0_UF3Rbuxq6XsFTzjTNqZAZzd1N3gTNtPUHHHQdc-DuIOzNL-RSZ3NGm9Pr4toVShX5qYCZg4" />
  </picture>
 </a>
 
