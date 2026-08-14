@@ -9,6 +9,7 @@ import logging
 
 import uvicorn
 
+from courant.events_bus import EventBus
 from courant.service import ReminderService
 from courant.web import create_app
 
@@ -19,9 +20,10 @@ def run_server(
     service: ReminderService,
     host: str = "127.0.0.1",
     port: int = 8765,
+    bus: EventBus | None = None,
 ) -> None:
     """Block until uvicorn shuts down (SIGINT/SIGTERM)."""
-    app = create_app(service)
+    app = create_app(service, bus=bus)
     config = uvicorn.Config(
         app=app,
         host=host,

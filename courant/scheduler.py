@@ -11,6 +11,7 @@ from apscheduler.schedulers.base import BaseScheduler  # type: ignore[import-unt
 from apscheduler.triggers.date import DateTrigger  # type: ignore[import-untyped]
 from apscheduler.triggers.interval import IntervalTrigger  # type: ignore[import-untyped]
 
+from courant.events_bus import EventBus
 from courant.notifier import Notifier
 from courant.service import ReminderService
 
@@ -27,10 +28,12 @@ class ReminderScheduler:
         scheduler: BaseScheduler,
         service: ReminderService,
         notifier: Notifier,
+        bus: EventBus | None = None,
     ) -> None:
         self._scheduler = scheduler
         self._service = service
         self._notifier = notifier
+        self._bus = bus
 
     def sync_jobs(self) -> None:
         """Reconcile scheduler state with service.list_active_reminders().
@@ -85,7 +88,17 @@ class ReminderScheduler:
         )
 
     def _fire(self, reminder_id: int) -> None:
-        self._service.fire_reminder(reminder_id, notifier=self._notifier)
+        r = self._service.fire_reminder(reminder_id, notifier=self._notifier)
+        if r is not None and self._bus is not None:
+            self._bus.publish_threadsafe({
+                "type": "reminder_fired",
+                "reminder_id": r.id,
+                "name": r.name,
+                "message": r.message,
+                "icon": r.icon,
+                "tracked": r.tracked,
+                "unit_label": r.unit_label,
+            })
 
     def start(self) -> None:
         if not self._scheduler.running:

@@ -15,6 +15,7 @@ import sys
 from apscheduler.schedulers.background import BackgroundScheduler  # type: ignore[import-untyped]
 
 from courant import __version__
+from courant.events_bus import EventBus
 from courant.notifier import DesktopNotifier, FakeNotifier, Notifier
 from courant.paths import db_path, ensure_dirs, log_path, systemd_user_dir
 from courant.repository import backup_if_stale, connect, migrate
@@ -66,8 +67,9 @@ def _run_daemon() -> int:
         logger.info("Seeded %d default reminders on first launch", seeded)
 
     notifier = _build_notifier()
+    bus = EventBus()
     apsched = BackgroundScheduler()
-    rs = ReminderScheduler(scheduler=apsched, service=service, notifier=notifier)
+    rs = ReminderScheduler(scheduler=apsched, service=service, notifier=notifier, bus=bus)
     rs.sync_jobs()
     rs.start()
 
@@ -76,7 +78,7 @@ def _run_daemon() -> int:
     try:
         # uvicorn handles SIGTERM/SIGINT internally and returns cleanly
         from courant.web_runner import run_server
-        run_server(service)
+        run_server(service, bus=bus)
     finally:
         rs.shutdown()
         conn.close()
